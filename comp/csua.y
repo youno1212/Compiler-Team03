@@ -144,13 +144,13 @@ statement_list
         ;
 
 if_statement
-        : IF LP statement RP statement else_list
-        | IF LP statement RP statement else_list ELSE statement
+        : IF LP expression RP statement else_list
+        | IF LP expression RP statement else_list ELSE statement
         ;
 
 else_list
         : /* empty */ 
-        | ELSIF LP statement RP statement
+        | else_list ELSIF LP expression RP statement
         ;
 
 type_specifier
