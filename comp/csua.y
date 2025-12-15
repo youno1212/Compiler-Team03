@@ -120,6 +120,7 @@ statement
         }
         | declaration_statement { /*printf("declaration_statement\n"); */}
 	| block
+        | if_statement
         ;
         
 declaration_statement
@@ -140,6 +141,16 @@ block
 statement_list
         : statement
         | statement_list statement
+        ;
+
+if_statement
+        : IF LP statement RP statement else_list
+        | IF LP statement RP statement else_list ELSE statement
+        ;
+
+else_list
+        : /* empty */ 
+        | ELSIF LP statement RP statement
         ;
 
 type_specifier
