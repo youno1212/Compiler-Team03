@@ -149,16 +149,18 @@ struct Expression_tag {
 typedef enum {
     EXPRESSION_STATEMENT = 1,
     DECLARATION_STATEMENT,
+    BLOCK_STATEMENT,              // ← 追加
     STATEMENT_TYPE_COUNT_PLUS_ONE
 } StatementType;
 
 
 struct Statement_tag {
     StatementType type;
-    int           line_number;
+    int           line_number;    // ← "line_nuBLOCK" を "line_number" に修正
     union {
-        Expression   *expression_s;
-        Declaration  *declaration_s;
+        Expression    *expression_s;
+        Declaration   *declaration_s;
+        StatementList *block_s;
     }u;
 
 };

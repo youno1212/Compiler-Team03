@@ -1,4 +1,3 @@
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -539,6 +538,15 @@ static void leave_declstmt(Statement* stmt, Visitor* visitor) {
     }
 }
 
+/* Block statement */
+static void enter_blockstmt(Statement* stmt, Visitor* visitor) {
+//    fprintf(stderr, "enter blockstmt\n");
+}
+
+static void leave_blockstmt(Statement* stmt, Visitor* visitor) {
+//    fprintf(stderr, "leave blockstmt\n");
+}
+
 
 MeanVisitor* create_mean_visitor() {
     visit_expr* enter_expr_list;
@@ -590,9 +598,10 @@ MeanVisitor* create_mean_visitor() {
     
     enter_stmt_list[EXPRESSION_STATEMENT]     = enter_exprstmt;
     enter_stmt_list[DECLARATION_STATEMENT]    = enter_declstmt;
+    enter_stmt_list[BLOCK_STATEMENT]          = enter_blockstmt;  // ← 追加
     
     
-    
+
     leave_expr_list[BOOLEAN_EXPRESSION]       = leave_boolexpr;
     leave_expr_list[INT_EXPRESSION]           = leave_intexpr;
     leave_expr_list[DOUBLE_EXPRESSION]        = leave_doubleexpr;
@@ -621,6 +630,7 @@ MeanVisitor* create_mean_visitor() {
     
     leave_stmt_list[EXPRESSION_STATEMENT]     = leave_exprstmt;
     leave_stmt_list[DECLARATION_STATEMENT]    = leave_declstmt;
+    leave_stmt_list[BLOCK_STATEMENT]          = leave_blockstmt;  // ← 追加
     
 
     ((Visitor*)visitor)->enter_expr_list = enter_expr_list;

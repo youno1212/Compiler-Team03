@@ -1,4 +1,3 @@
-
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -42,6 +41,14 @@ static void traverse_stmt_children(Statement* stmt, Visitor* visitor) {
         }
         case DECLARATION_STATEMENT: {
             traverse_expr(stmt->u.declaration_s->initializer, visitor);
+            break;
+        }
+        case BLOCK_STATEMENT: {
+            StatementList* list = stmt->u.block_s;
+            while (list != NULL) {
+                traverse_stmt(list->stmt, visitor);
+                list = list->next;
+            }
             break;
         }
         default: {

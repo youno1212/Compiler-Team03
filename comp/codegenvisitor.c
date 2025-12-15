@@ -401,6 +401,14 @@ static void leave_declstmt(Statement* stmt, Visitor* visitor) {
 //    fprintf(stderr, "leave declstmt\n");
 }
 
+/* Block statement */
+static void enter_blockstmt(Statement* stmt, Visitor* visitor) {
+//    fprintf(stderr, "enter blockstmt\n");
+}
+
+static void leave_blockstmt(Statement* stmt, Visitor* visitor) {
+//    fprintf(stderr, "leave blockstmt\n");
+}
 
 CodegenVisitor* create_codegen_visitor(CS_Compiler* compiler, CS_Executable *exec) {
     visit_expr* enter_expr_list;
@@ -467,6 +475,7 @@ CodegenVisitor* create_codegen_visitor(CS_Compiler* compiler, CS_Executable *exe
     
     enter_stmt_list[EXPRESSION_STATEMENT]     = enter_exprstmt;
     enter_stmt_list[DECLARATION_STATEMENT]    = enter_declstmt;
+    enter_stmt_list[BLOCK_STATEMENT]          = enter_blockstmt;  // ← 追加
     
     notify_expr_list[ASSIGN_EXPRESSION]       = notify_assignexpr;
     
@@ -500,6 +509,7 @@ CodegenVisitor* create_codegen_visitor(CS_Compiler* compiler, CS_Executable *exe
     
     leave_stmt_list[EXPRESSION_STATEMENT]     = leave_exprstmt;
     leave_stmt_list[DECLARATION_STATEMENT]    = leave_declstmt;
+    leave_stmt_list[BLOCK_STATEMENT]          = leave_blockstmt;  // ← 追加
     
     
     ((Visitor*)visitor)->enter_expr_list = enter_expr_list;
