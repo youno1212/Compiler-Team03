@@ -149,10 +149,17 @@ struct Expression_tag {
 typedef enum {
     EXPRESSION_STATEMENT = 1,
     DECLARATION_STATEMENT,
-    BLOCK_STATEMENT,              // ← 追加
+    BLOCK_STATEMENT,
+    IF_STATEMENT,                 // ← 追加
     STATEMENT_TYPE_COUNT_PLUS_ONE
 } StatementType;
 
+
+typedef struct {
+    Expression *condition;
+    Statement  *then_block;
+    Statement  *else_block;       // NULLの場合あり
+} IfStatement;
 
 struct Statement_tag {
     StatementType type;
@@ -161,6 +168,7 @@ struct Statement_tag {
         Expression    *expression_s;
         Declaration   *declaration_s;
         StatementList *block_s;
+        IfStatement   *if_s;          // ← 追加
     }u;
 
 };
