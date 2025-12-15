@@ -83,6 +83,7 @@ translation_unit
         : definition_or_statement  
         | translation_unit definition_or_statement 
 	;
+
 definition_or_statement
         : function_definition
         {
@@ -118,7 +119,9 @@ statement
             $$ = cs_create_expression_statement($1);
         }
         | declaration_statement { /*printf("declaration_statement\n"); */}
-	;
+	| block
+        | if_statement
+        ;
         
 declaration_statement
         : type_specifier IDENTIFIER SEMICOLON 
@@ -131,7 +134,25 @@ declaration_statement
         }
         ;
         
-        
+block
+        : LC statement_list RC
+        ;
+
+statement_list
+        : statement
+        | statement_list statement
+        ;
+
+if_statement
+        : IF LP expression RP statement else_list
+        | IF LP expression RP statement else_list ELSE statement
+        ;
+
+else_list
+        : /* empty */ 
+        | else_list ELSIF LP expression RP statement
+        ;
+
 type_specifier
         : BOOLEAN_T { $$ = CS_BOOLEAN_TYPE; }
         | INT_T     { $$ = CS_INT_TYPE;     }
