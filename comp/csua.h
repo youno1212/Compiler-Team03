@@ -154,6 +154,9 @@ typedef enum {
     STATEMENT_TYPE_COUNT_PLUS_ONE
 } StatementType;
 
+typedef struct {
+    struct StatementList_tag *statement_list;
+} BlockStatement;
 
 typedef struct {
     Expression *condition;
@@ -167,7 +170,7 @@ struct Statement_tag {
     union {
         Expression    *expression_s;
         Declaration   *declaration_s;
-        StatementList *block_s;
+        BlockStatement *block_s;
         IfStatement   *if_s;          // ← 追加
     }u;
 
