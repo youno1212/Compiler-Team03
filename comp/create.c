@@ -225,6 +225,16 @@ StatementList* cs_create_statement_list(Statement *stmt){
     return stmt_list;
 }
 
+StatementList* cs_chain_statement_list(StatementList* stmt_list, Statement* stmt){
+    StatementList* new_stmt_list = cs_create_statement_list(stmt);
+    StatementList* p = stmt_list;
+    while(p->next){
+        p = p->next;
+    }
+    p->next = new_stmt_list;
+    return stmt_list;
+}
+
 Statement* cs_create_if_statement(Expression* condition, Statement* then_block, Statement* else_block){
     Statement* stmt = cs_create_statement(IF_STATEMENT);
 
