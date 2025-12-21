@@ -210,6 +210,14 @@ FunctionDeclarationList* cs_create_function_declaration_list(FunctionDeclaration
     return list;
 }
 
+Statement* cs_create_block_statement(Statement* stmt_list){
+    Statement* stmt = cs_create_statement(BLOCK_STATEMENT);
+    BlockStatement* block = (BlockStatement*)cs_malloc(sizeof(BlockStatement));
+    block->statement_list = stmt_list;
+    stmt->u.block_s = block;
+    return stmt;
+}
+
 Statement* cs_create_if_statement(Expression* condition, Statement* then_block, Statement* else_block){
     Statement* stmt = cs_create_statement(IF_STATEMENT);
 
@@ -221,3 +229,5 @@ Statement* cs_create_if_statement(Expression* condition, Statement* then_block, 
     stmt->u.if_s = ifstmt;
     return stmt;
 }
+
+
