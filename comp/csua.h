@@ -155,7 +155,7 @@ typedef enum {
 } StatementType;
 
 typedef struct {
-    struct StatementList_tag *statement_list;
+    StatementList *statement_list;
 } BlockStatement;
 
 typedef struct {
