@@ -136,6 +136,7 @@ declaration_statement
         
 block
         : LC statement_list RC
+        | LC RC
         ;
 
 statement_list
