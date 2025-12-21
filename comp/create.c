@@ -218,6 +218,13 @@ Statement* cs_create_block_statement(Statement* stmt_list){
     return stmt;
 }
 
+StatementList* cs_create_statement_list(Statement *stmt){
+    StatementList* stmt_list = (StatementList*)cs_malloc(sizeof(StatementList));
+    stmt_list->stmt = stmt;
+    stmt_list->next = null;
+    return stmt_list;
+}
+
 Statement* cs_create_if_statement(Expression* condition, Statement* then_block, Statement* else_block){
     Statement* stmt = cs_create_statement(IF_STATEMENT);
 
