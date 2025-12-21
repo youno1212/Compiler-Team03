@@ -78,6 +78,9 @@ int yylex();
 %type <statement> statement declaration_statement
 %type <function_declaration> function_definition
 
+%nonassoc LOWER_THAN_ELSE
+%nonassoc ELSE
+
 %%
 translation_unit
         : definition_or_statement  
