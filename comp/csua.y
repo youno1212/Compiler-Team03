@@ -149,7 +149,13 @@ statement_list
 
 if_statement
         : IF LP expression RP statement %prec LOWER_THAN_ELSE
+        {
+            $$ = cs_create_if_statement($3, $5, NULL);
+        }
         | IF LP expression RP statement ELSE statement
+        {
+            $$ = cs_create_if_statement($3, $5, $7);
+        }
         ;
 
 type_specifier
