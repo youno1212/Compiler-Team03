@@ -145,13 +145,8 @@ statement_list
         ;
 
 if_statement
-        : IF LP expression RP statement else_list
-        | IF LP expression RP statement else_list ELSE statement
-        ;
-
-else_list
-        : /* empty */ 
-        | else_list ELSIF LP expression RP statement
+        : IF LP expression RP statement %prec LOWER_THAN_ELSE
+        | IF LP expression RP statement ELSE statement
         ;
 
 type_specifier
