@@ -210,3 +210,14 @@ FunctionDeclarationList* cs_create_function_declaration_list(FunctionDeclaration
     return list;
 }
 
+Statement* cs_create_if_statement(Expression* condition, Statement* then_block, Statement* else_block){
+    Statement* stmt = cs_create_statement(IF_STATEMENT);
+
+    IfStatement* ifstmt = (IfStatement*)cs_malloc(sizeof(IfStatement));
+    ifstmt->condition = condition;
+    ifstmt->then_block = then_block;
+    ifstmt->else_block = else_block;
+
+    stmt->u.if_s = ifstmt;
+    return stmt;
+}
