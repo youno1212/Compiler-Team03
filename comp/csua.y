@@ -75,7 +75,7 @@ int yylex();
                  
 %type <assignment_operator> assignment_operator
 %type <type_specifier> type_specifier
-%type <statement> statement declaration_statement
+%type <statement> statement declaration_statement block if_statement statement_list
 %type <function_declaration> function_definition
 
 %nonassoc LOWER_THAN_ELSE
