@@ -139,7 +139,13 @@ declaration_statement
         
 block
         : LC statement_list RC
+        {
+            $$ = cs_create_block_statement($2);
+        }
         | LC RC
+        {
+            $$ = sc_create_block_statement(NULL);
+        }
         ;
 
 statement_list
