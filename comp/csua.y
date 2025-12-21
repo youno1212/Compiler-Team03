@@ -150,7 +150,13 @@ block
 
 statement_list
         : statement
+        {
+            $$ = cs_create_statement_list($1);
+        }
         | statement_list statement
+        {
+            $$ = cs_chain_statement_list($1, $2);
+        }
         ;
 
 if_statement
