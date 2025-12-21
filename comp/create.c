@@ -210,7 +210,7 @@ FunctionDeclarationList* cs_create_function_declaration_list(FunctionDeclaration
     return list;
 }
 
-Statement* cs_create_block_statement(Statement* stmt_list){
+Statement* cs_create_block_statement(StatementList* stmt_list){
     Statement* stmt = cs_create_statement(BLOCK_STATEMENT);
     BlockStatement* block = (BlockStatement*)cs_malloc(sizeof(BlockStatement));
     block->statement_list = stmt_list;
