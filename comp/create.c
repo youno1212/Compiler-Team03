@@ -218,13 +218,6 @@ Statement* cs_create_block_statement(Statement* stmt_list){
     return stmt;
 }
 
-StatementList* cs_create_statement_list(Statement *stmt){
-    StatementList* stmt_list = (StatementList*)cs_malloc(sizeof(StatementList));
-    stmt_list->stmt = stmt;
-    stmt_list->next = null;
-    return stmt_list;
-}
-
 StatementList* cs_chain_statement_list(StatementList* stmt_list, Statement* stmt){
     StatementList* new_stmt_list = cs_create_statement_list(stmt);
     StatementList* p = stmt_list;
