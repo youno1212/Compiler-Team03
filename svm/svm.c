@@ -564,7 +564,7 @@ int main(int argc, char *argv[]) {
     } else {        
         add_native_functions(svm);        
         init_svm(svm);
-        svm_runn(svm);
+        svm_run(svm);
     }
     
     svm_delete(svm);
