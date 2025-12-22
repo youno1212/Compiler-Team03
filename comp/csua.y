@@ -144,7 +144,7 @@ block
         }
         | LC RC
         {
-            $$ = sc_create_block_statement(NULL);
+            $$ = cs_create_block_statement(NULL);
         }
         ;
 
