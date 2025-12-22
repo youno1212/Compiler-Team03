@@ -289,6 +289,10 @@ TypeSpecifier *cs_create_type_specifier(CS_BasicType type);
 FunctionDeclaration *cs_create_function_declaration(CS_BasicType type, char *name);
 FunctionDeclarationList *cs_create_function_declaration_list(FunctionDeclaration *func);
 
+Statement* cs_create_block_statement(StatementList* stmt_list);
+
+Statement* cs_create_if_statement(Expression* condition, Statement* then_block, Statement* else_block);
+
 /* interface.c */
 CS_Compiler *CS_create_compiler();
 CS_Boolean CS_compile(CS_Compiler *compiler, FILE *fin);
