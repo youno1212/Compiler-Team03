@@ -410,6 +410,149 @@ static void leave_blockstmt(Statement* stmt, Visitor* visitor) {
 //    fprintf(stderr, "leave blockstmt\n");
 }
 
+/* ============================================================
+ * If statement のバイトコード生成
+ * ============================================================
+ * 
+ * if文のバイトコード構造:
+ * 
+ *   [条件式のバイトコード]      <- 条件式を評価し、結果をスタックにプッシュ
+ *   JUMP_IF_FALSE else_label   <- 条件が偽ならelse部分へジャンプ
+ *   [then節のバイトコード]      <- 条件が真の場合に実行
+ *   JUMP end_label             <- then節実行後、if文の終わりへジャンプ
+ * else_label:
+ *   [else節のバイトコード]      <- 条件が偽の場合に実行（省略可能）
+ * end_label:
+ *   [if文の次の処理]
+ * 
+ * バックパッチ:
+ *   ジャンプ命令を生成する時点では、ジャンプ先のアドレスが未確定。
+ *   そのため、仮のアドレス(0)を設定しておき、後でジャンプ先が確定したら
+ *   正しいアドレスに書き換える（バックパッチ）。
+ * ============================================================ */
+
+/* 
+ * バックパッチ用ヘルパー関数
+ * 指定した位置のジャンプ先アドレスを更新する
+ * 
+ * @param visitor: CodegenVisitor
+ * @param patch_pos: パッチする位置（ジャンプ命令のオペランド位置）
+ * @param target_addr: 新しいジャンプ先アドレス
+ */
+static void backpatch(CodegenVisitor* visitor, uint32_t patch_pos, uint32_t target_addr) {
+    /* 2バイトのアドレスを書き込む（上位バイト、下位バイトの順） */
+    visitor->code[patch_pos]     = (target_addr >> 8) & 0xff;  /* 上位8ビット */
+    visitor->code[patch_pos + 1] = target_addr & 0xff;          /* 下位8ビット */
+}
+
+/*
+ * 現在のコード位置を取得
+ * ジャンプ先のラベル位置として使用
+ */
+static uint32_t get_current_pos(CodegenVisitor* visitor) {
+    return visitor->pos;
+}
+
+/*
+ * ジャンプ命令を生成し、後でバックパッチするための位置を返す
+ * 
+ * @param visitor: CodegenVisitor
+ * @param op: ジャンプオペコード（SVM_JUMP または SVM_JUMP_IF_FALSE）
+ * @return: オペランド（アドレス）の位置（バックパッチ用）
+ */
+static uint32_t gen_jump_code(CodegenVisitor* visitor, SVM_Opcode op) {
+    /* ジャンプ命令を生成（アドレスは仮に0を設定） */
+    gen_byte_code(visitor, op, 0);
+    /* オペランドの開始位置を返す（オペコード1バイトの直後） */
+    /* pos は gen_byte_code 後に進んでいるので、-2 で2バイトのオペランド位置を指す */
+    return visitor->pos - 2;
+}
+
+static void enter_ifstmt(Statement* stmt, Visitor* visitor) {
+//    fprintf(stderr, "enter ifstmt\n");
+    /* 
+     * enter時: バックパッチスタックに新しいエントリを準備
+     * else節があるかどうかを事前に確認して保存
+     */
+    CodegenVisitor* cv = (CodegenVisitor*)visitor;
+    cv->if_stack_top++;
+    
+    if (cv->if_stack_top >= MAX_IF_NEST_DEPTH) {
+        fprintf(stderr, "Error: if statement nesting too deep\n");
+        exit(1);
+    }
+    
+    /* else節の有無を保存 */
+    cv->if_stack[cv->if_stack_top].has_else = (stmt->u.if_s->else_block != NULL);
+    cv->if_stack[cv->if_stack_top].jump_if_false_pos = 0;
+    cv->if_stack[cv->if_stack_top].jump_pos = 0;
+}
+
+/*
+ * notify_ifstmt: 条件式評価後に呼ばれる
+ * 
+ * このタイミングで:
+ *   1. JUMP_IF_FALSE命令を生成（条件が偽ならelse/endif へジャンプ）
+ *   2. バックパッチ位置を保存
+ */
+static void notify_ifstmt(Statement* stmt, Visitor* visitor) {
+//    fprintf(stderr, "notify ifstmt: generating JUMP_IF_FALSE\n");
+    CodegenVisitor* cv = (CodegenVisitor*)visitor;
+    
+    /* JUMP_IF_FALSE命令を生成し、オペランド位置を保存 */
+    /* 条件が偽の場合、else節またはif文の終わりにジャンプ */
+    cv->if_stack[cv->if_stack_top].jump_if_false_pos = gen_jump_code(cv, SVM_JUMP_IF_FALSE);
+}
+
+/*
+ * notify2_ifstmt: then節終了後、else節開始前に呼ばれる
+ * 
+ * else節がある場合のみ呼ばれる
+ * このタイミングで:
+ *   1. JUMP命令を生成（then節からif文の終わりへジャンプ）
+ *   2. JUMP_IF_FALSEのジャンプ先をバックパッチ（else節の開始位置）
+ */
+static void notify2_ifstmt(Statement* stmt, Visitor* visitor) {
+//    fprintf(stderr, "notify2 ifstmt: generating JUMP and backpatching JUMP_IF_FALSE\n");
+    CodegenVisitor* cv = (CodegenVisitor*)visitor;
+    
+    /* 1. JUMP命令を生成（then節実行後、if文の終わりへスキップ） */
+    cv->if_stack[cv->if_stack_top].jump_pos = gen_jump_code(cv, SVM_JUMP);
+    
+    /* 2. JUMP_IF_FALSEのジャンプ先を現在位置（else節の開始）にバックパッチ */
+    uint32_t else_start_pos = get_current_pos(cv);
+    backpatch(cv, cv->if_stack[cv->if_stack_top].jump_if_false_pos, else_start_pos);
+}
+
+static void leave_ifstmt(Statement* stmt, Visitor* visitor) {
+//    fprintf(stderr, "leave ifstmt: backpatching\n");
+    CodegenVisitor* cv = (CodegenVisitor*)visitor;
+    
+    uint32_t current_pos = get_current_pos(cv);
+    
+    /* 
+     * leave時: 最終的なバックパッチを実行
+     * 
+     * else節がない場合:
+     *   JUMP_IF_FALSE -> 現在位置（if文の終わり）
+     * 
+     * else節がある場合:
+     *   JUMP_IF_FALSE は notify2 で既にバックパッチ済み
+     *   JUMP -> 現在位置（if文の終わり）
+     */
+    
+    if (cv->if_stack[cv->if_stack_top].has_else) {
+        /* else節がある場合: JUMPのジャンプ先を現在位置にバックパッチ */
+        backpatch(cv, cv->if_stack[cv->if_stack_top].jump_pos, current_pos);
+    } else {
+        /* else節がない場合: JUMP_IF_FALSEのジャンプ先を現在位置にバックパッチ */
+        backpatch(cv, cv->if_stack[cv->if_stack_top].jump_if_false_pos, current_pos);
+    }
+    
+    /* スタックをポップ */
+    cv->if_stack_top--;
+}
+
 CodegenVisitor* create_codegen_visitor(CS_Compiler* compiler, CS_Executable *exec) {
     visit_expr* enter_expr_list;
     visit_expr* leave_expr_list;
@@ -417,6 +560,8 @@ CodegenVisitor* create_codegen_visitor(CS_Compiler* compiler, CS_Executable *exe
     visit_stmt* leave_stmt_list;
     
     visit_expr* notify_expr_list;
+    visit_stmt* notify_stmt_list;   /* if文などの制御文用: 条件式評価後 */
+    visit_stmt* notify2_stmt_list;  /* if文のelse節用: then節終了後 */
     
     if (compiler == NULL || exec == NULL) {
         fprintf(stderr, "Compiler or Executable is NULL\n");
@@ -433,6 +578,8 @@ CodegenVisitor* create_codegen_visitor(CS_Compiler* compiler, CS_Executable *exe
     visitor->v_state = VISIT_NORMAL;
     visitor->assign_depth = 0;
     
+    /* if文バックパッチ用スタックの初期化 */
+    visitor->if_stack_top = -1;  /* スタックは空の状態 */
 
     enter_expr_list = (visit_expr*)MEM_malloc(sizeof(visit_expr) * EXPRESSION_KIND_PLUS_ONE);
     leave_expr_list = (visit_expr*)MEM_malloc(sizeof(visit_expr) * EXPRESSION_KIND_PLUS_ONE);
@@ -440,12 +587,16 @@ CodegenVisitor* create_codegen_visitor(CS_Compiler* compiler, CS_Executable *exe
     
     enter_stmt_list = (visit_stmt*)MEM_malloc(sizeof(visit_stmt) * STATEMENT_TYPE_COUNT_PLUS_ONE);
     leave_stmt_list = (visit_stmt*)MEM_malloc(sizeof(visit_stmt) * STATEMENT_TYPE_COUNT_PLUS_ONE);
+    notify_stmt_list = (visit_stmt*)MEM_malloc(sizeof(visit_stmt) * STATEMENT_TYPE_COUNT_PLUS_ONE);   /* if文用 */
+    notify2_stmt_list = (visit_stmt*)MEM_malloc(sizeof(visit_stmt) * STATEMENT_TYPE_COUNT_PLUS_ONE);  /* else節用 */
     
     memset(enter_expr_list, 0, sizeof(visit_expr) * EXPRESSION_KIND_PLUS_ONE);
     memset(leave_expr_list, 0, sizeof(visit_expr) * EXPRESSION_KIND_PLUS_ONE);
     memset(notify_expr_list, 0, sizeof(visit_expr) * EXPRESSION_KIND_PLUS_ONE);    
-    memset(enter_stmt_list, 0, sizeof(visit_expr) * STATEMENT_TYPE_COUNT_PLUS_ONE);
-    memset(leave_stmt_list, 0, sizeof(visit_expr) * STATEMENT_TYPE_COUNT_PLUS_ONE);
+    memset(enter_stmt_list, 0, sizeof(visit_stmt) * STATEMENT_TYPE_COUNT_PLUS_ONE);
+    memset(leave_stmt_list, 0, sizeof(visit_stmt) * STATEMENT_TYPE_COUNT_PLUS_ONE);
+    memset(notify_stmt_list, 0, sizeof(visit_stmt) * STATEMENT_TYPE_COUNT_PLUS_ONE);   /* if文用 */
+    memset(notify2_stmt_list, 0, sizeof(visit_stmt) * STATEMENT_TYPE_COUNT_PLUS_ONE);  /* else節用 */
 
     
     enter_expr_list[BOOLEAN_EXPRESSION]       = enter_boolexpr;
@@ -475,9 +626,16 @@ CodegenVisitor* create_codegen_visitor(CS_Compiler* compiler, CS_Executable *exe
     
     enter_stmt_list[EXPRESSION_STATEMENT]     = enter_exprstmt;
     enter_stmt_list[DECLARATION_STATEMENT]    = enter_declstmt;
-    enter_stmt_list[BLOCK_STATEMENT]          = enter_blockstmt;  // ← 追加
+    enter_stmt_list[BLOCK_STATEMENT]          = enter_blockstmt;
+    enter_stmt_list[IF_STATEMENT]             = enter_ifstmt;  /* if文のenter関数を登録 */
     
     notify_expr_list[ASSIGN_EXPRESSION]       = notify_assignexpr;
+    
+    /* if文: 条件式評価後にJUMP_IF_FALSE命令を生成するためのnotify関数 */
+    notify_stmt_list[IF_STATEMENT]            = notify_ifstmt;
+    
+    /* if文: then節終了後にJUMP命令を生成し、JUMP_IF_FALSEをバックパッチするnotify2関数 */
+    notify2_stmt_list[IF_STATEMENT]           = notify2_ifstmt;
     
     
     
@@ -509,7 +667,8 @@ CodegenVisitor* create_codegen_visitor(CS_Compiler* compiler, CS_Executable *exe
     
     leave_stmt_list[EXPRESSION_STATEMENT]     = leave_exprstmt;
     leave_stmt_list[DECLARATION_STATEMENT]    = leave_declstmt;
-    leave_stmt_list[BLOCK_STATEMENT]          = leave_blockstmt;  // ← 追加
+    leave_stmt_list[BLOCK_STATEMENT]          = leave_blockstmt;
+    leave_stmt_list[IF_STATEMENT]             = leave_ifstmt;  /* if文のleave関数を登録 */
     
     
     ((Visitor*)visitor)->enter_expr_list = enter_expr_list;
@@ -518,6 +677,8 @@ CodegenVisitor* create_codegen_visitor(CS_Compiler* compiler, CS_Executable *exe
     ((Visitor*)visitor)->leave_stmt_list = leave_stmt_list;
 
     ((Visitor*)visitor)->notify_expr_list = notify_expr_list;
+    ((Visitor*)visitor)->notify_stmt_list = notify_stmt_list;    /* if文用: 条件式評価後 */
+    ((Visitor*)visitor)->notify2_stmt_list = notify2_stmt_list;  /* if文用: then節終了後 */
     
     
     
