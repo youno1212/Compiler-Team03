@@ -54,7 +54,4 @@ int k = 1;
 double j = 1.2;
 i = j = 1;
 
-# for if statement
-if(1){
-    a = 1;
-}
+
