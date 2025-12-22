@@ -170,11 +170,12 @@ union YYSTYPE
     char                *name;
     Expression          *expression;
     Statement           *statement;
+    StatementList       *statement_list;
     FunctionDeclaration *function_declaration;
     AssignmentOperator   assignment_operator;
     CS_BasicType         type_specifier;
 
-#line 178 "y.tab.h"
+#line 179 "y.tab.h"
 
 };
 typedef union YYSTYPE YYSTYPE;

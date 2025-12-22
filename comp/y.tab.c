@@ -236,11 +236,12 @@ union YYSTYPE
     char                *name;
     Expression          *expression;
     Statement           *statement;
+    StatementList       *statement_list;
     FunctionDeclaration *function_declaration;
     AssignmentOperator   assignment_operator;
     CS_BasicType         type_specifier;
 
-#line 244 "y.tab.c"
+#line 245 "y.tab.c"
 
 };
 typedef union YYSTYPE YYSTYPE;
@@ -723,13 +724,13 @@ static const yytype_int8 yytranslate[] =
 /* YYRLINE[YYN] -- Source line where rule number YYN was defined.  */
 static const yytype_int16 yyrline[] =
 {
-       0,    86,    86,    87,    91,    98,   108,   114,   124,   125,
-     126,   130,   134,   141,   145,   152,   156,   163,   167,   174,
-     175,   176,   180,   190,   191,   197,   198,   199,   200,   201,
-     202,   206,   207,   210,   211,   215,   216,   217,   221,   222,
-     223,   224,   225,   229,   230,   231,   235,   236,   237,   238,
-     242,   243,   244,   248,   249,   250,   251,   255,   256,   257,
-     258,   259,   260
+       0,    88,    88,    89,    93,   100,   110,   116,   126,   127,
+     128,   132,   136,   143,   147,   154,   158,   165,   169,   176,
+     177,   178,   182,   192,   193,   199,   200,   201,   202,   203,
+     204,   208,   209,   212,   213,   217,   218,   219,   223,   224,
+     225,   226,   227,   231,   232,   233,   237,   238,   239,   240,
+     244,   245,   246,   250,   251,   252,   253,   257,   258,   259,
+     260,   261,   262
 };
 #endif
 
@@ -1376,35 +1377,35 @@ yyreduce:
   switch (yyn)
     {
   case 4: /* definition_or_statement: function_definition  */
-#line 92 "csua.y"
+#line 94 "csua.y"
         {
            CS_Compiler* compiler = cs_get_current_compiler();
            if (compiler) {
                compiler->func_list = cs_chain_function_declaration_list(compiler->func_list, (yyvsp[0].function_declaration));
            }
         }
-#line 1387 "y.tab.c"
+#line 1388 "y.tab.c"
     break;
 
   case 5: /* definition_or_statement: statement  */
-#line 99 "csua.y"
+#line 101 "csua.y"
         {
            CS_Compiler* compiler = cs_get_current_compiler();
            if (compiler) {
                compiler->stmt_list = cs_chain_statement_list(compiler->stmt_list, (yyvsp[0].statement));
            }
         }
-#line 1398 "y.tab.c"
+#line 1399 "y.tab.c"
     break;
 
   case 6: /* function_definition: type_specifier IDENTIFIER LP RP SEMICOLON  */
-#line 108 "csua.y"
+#line 110 "csua.y"
                                                     { (yyval.function_declaration) = cs_create_function_declaration((yyvsp[-4].type_specifier), (yyvsp[-3].name));}
-#line 1404 "y.tab.c"
+#line 1405 "y.tab.c"
     break;
 
   case 7: /* statement: expression SEMICOLON  */
-#line 115 "csua.y"
+#line 117 "csua.y"
         {
     /*
            CS_Compiler* compiler = cs_get_current_compiler();
@@ -1414,297 +1415,297 @@ yyreduce:
      */
             (yyval.statement) = cs_create_expression_statement((yyvsp[-1].expression));
         }
-#line 1418 "y.tab.c"
+#line 1419 "y.tab.c"
     break;
 
   case 8: /* statement: declaration_statement  */
-#line 124 "csua.y"
+#line 126 "csua.y"
                                 { /*printf("declaration_statement\n"); */}
-#line 1424 "y.tab.c"
+#line 1425 "y.tab.c"
     break;
 
   case 11: /* declaration_statement: type_specifier IDENTIFIER SEMICOLON  */
-#line 131 "csua.y"
+#line 133 "csua.y"
         { 
             (yyval.statement) = cs_create_declaration_statement((yyvsp[-2].type_specifier), (yyvsp[-1].name), NULL); 
         }
-#line 1432 "y.tab.c"
+#line 1433 "y.tab.c"
     break;
 
   case 12: /* declaration_statement: type_specifier IDENTIFIER ASSIGN_T expression SEMICOLON  */
-#line 135 "csua.y"
+#line 137 "csua.y"
         {
             (yyval.statement) = cs_create_declaration_statement((yyvsp[-4].type_specifier), (yyvsp[-3].name), (yyvsp[-1].expression)); 
         }
-#line 1440 "y.tab.c"
+#line 1441 "y.tab.c"
     break;
 
   case 13: /* block: LC statement_list RC  */
-#line 142 "csua.y"
+#line 144 "csua.y"
         {
-            (yyval.statement) = cs_create_block_statement((yyvsp[-1].statement));
+            (yyval.statement) = cs_create_block_statement((yyvsp[-1].statement_list));
         }
-#line 1448 "y.tab.c"
+#line 1449 "y.tab.c"
     break;
 
   case 14: /* block: LC RC  */
-#line 146 "csua.y"
+#line 148 "csua.y"
         {
             (yyval.statement) = cs_create_block_statement(NULL);
         }
-#line 1456 "y.tab.c"
+#line 1457 "y.tab.c"
     break;
 
   case 15: /* statement_list: statement  */
-#line 153 "csua.y"
+#line 155 "csua.y"
         {
-            (yyval.statement) = cs_create_statement_list((yyvsp[0].statement));
+            (yyval.statement_list) = cs_create_statement_list((yyvsp[0].statement));
         }
-#line 1464 "y.tab.c"
+#line 1465 "y.tab.c"
     break;
 
   case 16: /* statement_list: statement_list statement  */
-#line 157 "csua.y"
+#line 159 "csua.y"
         {
-            (yyval.statement) = cs_chain_statement_list((yyvsp[-1].statement), (yyvsp[0].statement));
+            (yyval.statement_list) = cs_chain_statement_list((yyvsp[-1].statement_list), (yyvsp[0].statement));
         }
-#line 1472 "y.tab.c"
+#line 1473 "y.tab.c"
     break;
 
   case 17: /* if_statement: IF LP expression RP statement  */
-#line 164 "csua.y"
+#line 166 "csua.y"
         {
             (yyval.statement) = cs_create_if_statement((yyvsp[-2].expression), (yyvsp[0].statement), NULL);
         }
-#line 1480 "y.tab.c"
+#line 1481 "y.tab.c"
     break;
 
   case 18: /* if_statement: IF LP expression RP statement ELSE statement  */
-#line 168 "csua.y"
+#line 170 "csua.y"
         {
             (yyval.statement) = cs_create_if_statement((yyvsp[-4].expression), (yyvsp[-2].statement), (yyvsp[0].statement));
         }
-#line 1488 "y.tab.c"
+#line 1489 "y.tab.c"
     break;
 
   case 19: /* type_specifier: BOOLEAN_T  */
-#line 174 "csua.y"
+#line 176 "csua.y"
                     { (yyval.type_specifier) = CS_BOOLEAN_TYPE; }
-#line 1494 "y.tab.c"
+#line 1495 "y.tab.c"
     break;
 
   case 20: /* type_specifier: INT_T  */
-#line 175 "csua.y"
+#line 177 "csua.y"
                     { (yyval.type_specifier) = CS_INT_TYPE;     }
-#line 1500 "y.tab.c"
+#line 1501 "y.tab.c"
     break;
 
   case 21: /* type_specifier: DOUBLE_T  */
-#line 176 "csua.y"
+#line 178 "csua.y"
                     { (yyval.type_specifier) = CS_DOUBLE_TYPE;  }
-#line 1506 "y.tab.c"
+#line 1507 "y.tab.c"
     break;
 
   case 22: /* expression: assignment_expression  */
-#line 181 "csua.y"
+#line 183 "csua.y"
          { 
              Expression* expr = (yyvsp[0].expression);
 //             printf("type = %d\n", expr->kind);
              (yyval.expression) = (yyvsp[0].expression);
          }
-#line 1516 "y.tab.c"
+#line 1517 "y.tab.c"
     break;
 
   case 24: /* assignment_expression: postfix_expression assignment_operator assignment_expression  */
-#line 192 "csua.y"
+#line 194 "csua.y"
         {
           (yyval.expression) = cs_create_assignment_expression((yyvsp[-2].expression), (yyvsp[-1].assignment_operator), (yyvsp[0].expression));
         }
-#line 1524 "y.tab.c"
+#line 1525 "y.tab.c"
     break;
 
   case 25: /* assignment_operator: ASSIGN_T  */
-#line 197 "csua.y"
+#line 199 "csua.y"
                           { (yyval.assignment_operator) = ASSIGN;     }
-#line 1530 "y.tab.c"
+#line 1531 "y.tab.c"
     break;
 
   case 26: /* assignment_operator: ADD_ASSIGN_T  */
-#line 198 "csua.y"
+#line 200 "csua.y"
                           { (yyval.assignment_operator) = ADD_ASSIGN; }
-#line 1536 "y.tab.c"
+#line 1537 "y.tab.c"
     break;
 
   case 27: /* assignment_operator: SUB_ASSIGN_T  */
-#line 199 "csua.y"
+#line 201 "csua.y"
                           { (yyval.assignment_operator) = SUB_ASSIGN; }
-#line 1542 "y.tab.c"
+#line 1543 "y.tab.c"
     break;
 
   case 28: /* assignment_operator: MUL_ASSIGN_T  */
-#line 200 "csua.y"
+#line 202 "csua.y"
                           { (yyval.assignment_operator) = MUL_ASSIGN; }
-#line 1548 "y.tab.c"
+#line 1549 "y.tab.c"
     break;
 
   case 29: /* assignment_operator: DIV_ASSIGN_T  */
-#line 201 "csua.y"
+#line 203 "csua.y"
                           { (yyval.assignment_operator) = DIV_ASSIGN; }
-#line 1554 "y.tab.c"
+#line 1555 "y.tab.c"
     break;
 
   case 30: /* assignment_operator: MOD_ASSIGN_T  */
-#line 202 "csua.y"
+#line 204 "csua.y"
                           { (yyval.assignment_operator) = MOD_ASSIGN; }
-#line 1560 "y.tab.c"
+#line 1561 "y.tab.c"
     break;
 
   case 32: /* logical_or_expression: logical_or_expression LOGICAL_OR logical_and_expression  */
-#line 207 "csua.y"
+#line 209 "csua.y"
                                                                   { (yyval.expression) = cs_create_binary_expression(LOGICAL_OR_EXPRESSION, (yyvsp[-2].expression), (yyvsp[0].expression));  }
-#line 1566 "y.tab.c"
+#line 1567 "y.tab.c"
     break;
 
   case 34: /* logical_and_expression: logical_and_expression LOGICAL_AND equality_expression  */
-#line 211 "csua.y"
+#line 213 "csua.y"
                                                                   { (yyval.expression) = cs_create_binary_expression(LOGICAL_AND_EXPRESSION, (yyvsp[-2].expression), (yyvsp[0].expression));  }
-#line 1572 "y.tab.c"
+#line 1573 "y.tab.c"
     break;
 
   case 36: /* equality_expression: equality_expression EQ relational_expression  */
-#line 216 "csua.y"
+#line 218 "csua.y"
                                                        { (yyval.expression) = cs_create_binary_expression(EQ_EXPRESSION, (yyvsp[-2].expression), (yyvsp[0].expression));  }
-#line 1578 "y.tab.c"
+#line 1579 "y.tab.c"
     break;
 
   case 37: /* equality_expression: equality_expression NE relational_expression  */
-#line 217 "csua.y"
+#line 219 "csua.y"
                                                        { (yyval.expression) = cs_create_binary_expression(NE_EXPRESSION, (yyvsp[-2].expression), (yyvsp[0].expression));  }
-#line 1584 "y.tab.c"
+#line 1585 "y.tab.c"
     break;
 
   case 39: /* relational_expression: relational_expression GT additive_expression  */
-#line 222 "csua.y"
+#line 224 "csua.y"
                                                        { (yyval.expression) = cs_create_binary_expression(GT_EXPRESSION, (yyvsp[-2].expression), (yyvsp[0].expression)); }
-#line 1590 "y.tab.c"
+#line 1591 "y.tab.c"
     break;
 
   case 40: /* relational_expression: relational_expression GE additive_expression  */
-#line 223 "csua.y"
+#line 225 "csua.y"
                                                        { (yyval.expression) = cs_create_binary_expression(GE_EXPRESSION, (yyvsp[-2].expression), (yyvsp[0].expression)); }
-#line 1596 "y.tab.c"
+#line 1597 "y.tab.c"
     break;
 
   case 41: /* relational_expression: relational_expression LT additive_expression  */
-#line 224 "csua.y"
+#line 226 "csua.y"
                                                        { (yyval.expression) = cs_create_binary_expression(LT_EXPRESSION, (yyvsp[-2].expression), (yyvsp[0].expression)); }
-#line 1602 "y.tab.c"
+#line 1603 "y.tab.c"
     break;
 
   case 42: /* relational_expression: relational_expression LE additive_expression  */
-#line 225 "csua.y"
+#line 227 "csua.y"
                                                        { (yyval.expression) = cs_create_binary_expression(LE_EXPRESSION, (yyvsp[-2].expression), (yyvsp[0].expression)); }
-#line 1608 "y.tab.c"
+#line 1609 "y.tab.c"
     break;
 
   case 44: /* additive_expression: additive_expression ADD multiplicative_expression  */
-#line 230 "csua.y"
+#line 232 "csua.y"
                                                              { (yyval.expression) = cs_create_binary_expression(ADD_EXPRESSION, (yyvsp[-2].expression), (yyvsp[0].expression)); }
-#line 1614 "y.tab.c"
+#line 1615 "y.tab.c"
     break;
 
   case 45: /* additive_expression: additive_expression SUB multiplicative_expression  */
-#line 231 "csua.y"
+#line 233 "csua.y"
                                                              { (yyval.expression) = cs_create_binary_expression(SUB_EXPRESSION, (yyvsp[-2].expression), (yyvsp[0].expression)); }
-#line 1620 "y.tab.c"
+#line 1621 "y.tab.c"
     break;
 
   case 47: /* multiplicative_expression: multiplicative_expression MUL unary_expression  */
-#line 236 "csua.y"
+#line 238 "csua.y"
                                                          { (yyval.expression) = cs_create_binary_expression(MUL_EXPRESSION, (yyvsp[-2].expression), (yyvsp[0].expression)); }
-#line 1626 "y.tab.c"
+#line 1627 "y.tab.c"
     break;
 
   case 48: /* multiplicative_expression: multiplicative_expression DIV unary_expression  */
-#line 237 "csua.y"
+#line 239 "csua.y"
                                                          { (yyval.expression) = cs_create_binary_expression(DIV_EXPRESSION, (yyvsp[-2].expression), (yyvsp[0].expression)); }
-#line 1632 "y.tab.c"
+#line 1633 "y.tab.c"
     break;
 
   case 49: /* multiplicative_expression: multiplicative_expression MOD unary_expression  */
-#line 238 "csua.y"
+#line 240 "csua.y"
                                                          { (yyval.expression) = cs_create_binary_expression(MOD_EXPRESSION, (yyvsp[-2].expression), (yyvsp[0].expression)); }
-#line 1638 "y.tab.c"
+#line 1639 "y.tab.c"
     break;
 
   case 51: /* unary_expression: SUB unary_expression  */
-#line 243 "csua.y"
+#line 245 "csua.y"
                                         { (yyval.expression) = cs_create_minus_expression((yyvsp[0].expression)); }
-#line 1644 "y.tab.c"
+#line 1645 "y.tab.c"
     break;
 
   case 52: /* unary_expression: EXCLAMATION unary_expression  */
-#line 244 "csua.y"
+#line 246 "csua.y"
                                         { (yyval.expression) = cs_create_logical_not_expression((yyvsp[0].expression)); }
-#line 1650 "y.tab.c"
+#line 1651 "y.tab.c"
     break;
 
   case 54: /* postfix_expression: postfix_expression LP RP  */
-#line 249 "csua.y"
+#line 251 "csua.y"
                                        { (yyval.expression) = cs_create_function_call_expression((yyvsp[-2].expression), NULL); }
-#line 1656 "y.tab.c"
+#line 1657 "y.tab.c"
     break;
 
   case 55: /* postfix_expression: postfix_expression INCREMENT  */
-#line 250 "csua.y"
+#line 252 "csua.y"
                                        { (yyval.expression) = cs_create_inc_dec_expression((yyvsp[-1].expression), INCREMENT_EXPRESSION);}
-#line 1662 "y.tab.c"
+#line 1663 "y.tab.c"
     break;
 
   case 56: /* postfix_expression: postfix_expression DECREMENT  */
-#line 251 "csua.y"
+#line 253 "csua.y"
                                        { (yyval.expression) = cs_create_inc_dec_expression((yyvsp[-1].expression), DECREMENT_EXPRESSION);}
-#line 1668 "y.tab.c"
+#line 1669 "y.tab.c"
     break;
 
   case 57: /* primary_expression: LP expression RP  */
-#line 255 "csua.y"
+#line 257 "csua.y"
                            { (yyval.expression) = (yyvsp[-1].expression);}
-#line 1674 "y.tab.c"
+#line 1675 "y.tab.c"
     break;
 
   case 58: /* primary_expression: IDENTIFIER  */
-#line 256 "csua.y"
+#line 258 "csua.y"
                            { (yyval.expression) = cs_create_identifier_expression((yyvsp[0].name)); }
-#line 1680 "y.tab.c"
+#line 1681 "y.tab.c"
     break;
 
   case 59: /* primary_expression: INT_LITERAL  */
-#line 257 "csua.y"
+#line 259 "csua.y"
                            { (yyval.expression) = cs_create_int_expression((yyvsp[0].iv)); }
-#line 1686 "y.tab.c"
+#line 1687 "y.tab.c"
     break;
 
   case 60: /* primary_expression: DOUBLE_LITERAL  */
-#line 258 "csua.y"
+#line 260 "csua.y"
                            { (yyval.expression) = cs_create_double_expression((yyvsp[0].dv)); }
-#line 1692 "y.tab.c"
+#line 1693 "y.tab.c"
     break;
 
   case 61: /* primary_expression: TRUE_T  */
-#line 259 "csua.y"
+#line 261 "csua.y"
                            { (yyval.expression) = cs_create_boolean_expression(CS_TRUE); }
-#line 1698 "y.tab.c"
+#line 1699 "y.tab.c"
     break;
 
   case 62: /* primary_expression: FALSE_T  */
-#line 260 "csua.y"
+#line 262 "csua.y"
                            { (yyval.expression) = cs_create_boolean_expression(CS_FALSE); }
-#line 1704 "y.tab.c"
+#line 1705 "y.tab.c"
     break;
 
 
-#line 1708 "y.tab.c"
+#line 1709 "y.tab.c"
 
       default: break;
     }
@@ -1897,7 +1898,7 @@ yyreturnlab:
   return yyresult;
 }
 
-#line 262 "csua.y"
+#line 264 "csua.y"
 
 int
 yyerror(char const *str)

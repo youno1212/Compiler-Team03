@@ -12,6 +12,7 @@ int yylex();
     char                *name;
     Expression          *expression;
     Statement           *statement;
+    StatementList       *statement_list;
     FunctionDeclaration *function_declaration;
     AssignmentOperator   assignment_operator;
     CS_BasicType         type_specifier;
@@ -75,7 +76,8 @@ int yylex();
                  
 %type <assignment_operator> assignment_operator
 %type <type_specifier> type_specifier
-%type <statement> statement declaration_statement block if_statement statement_list
+%type <statement> statement declaration_statement block if_statement 
+%type <statement_list> statement_list
 %type <function_declaration> function_definition
 
 %nonassoc LOWER_THAN_ELSE

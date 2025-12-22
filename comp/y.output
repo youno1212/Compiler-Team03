@@ -175,7 +175,7 @@ Nonterminals, with rules where they appear
     block <statement> (57)
         on left: 12 13
         on right: 8
-    statement_list <statement> (58)
+    statement_list <statement_list> (58)
         on left: 14 15
         on right: 12 15
     if_statement <statement> (59)

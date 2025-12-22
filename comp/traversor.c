@@ -44,7 +44,7 @@ static void traverse_stmt_children(Statement* stmt, Visitor* visitor) {
             break;
         }
         case BLOCK_STATEMENT: {
-            StatementList* list = stmt->u.block_s;
+            StatementList* list = stmt->u.block_s->statement_list;
             while (list != NULL) {
                 traverse_stmt(list->stmt, visitor);
                 list = list->next;
