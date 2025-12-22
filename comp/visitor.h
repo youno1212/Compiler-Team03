@@ -26,6 +26,14 @@ struct Visitor_tag {
     
     visit_stmt* enter_stmt_list;
     visit_stmt* leave_stmt_list;
+    
+    /* if文やwhile文のバイトコード生成用
+     * 条件式評価後にジャンプ命令を生成するためのコールバック */
+    visit_stmt* notify_stmt_list;
+    
+    /* if文のelse節用: then節終了後にJUMP命令を生成するためのコールバック
+     * else節がある場合のみ呼ばれる */
+    visit_stmt* notify2_stmt_list;
 };
 
 struct MeanVisitor_tag {
@@ -41,6 +49,20 @@ typedef enum {
     VISIT_NOMAL_ASSIGN,
 } VisitState;
 
+/* ============================================================
+ * if文のバックパッチ情報を保存するスタック
+ * ============================================================
+ * ネストしたif文に対応するため、スタック構造を使用
+ * 各if文のJUMP_IF_FALSEとJUMPの位置を保存
+ * ============================================================ */
+#define MAX_IF_NEST_DEPTH 64  /* if文の最大ネスト深度 */
+
+typedef struct {
+    uint32_t jump_if_false_pos;  /* JUMP_IF_FALSEのオペランド位置 */
+    uint32_t jump_pos;           /* JUMPのオペランド位置（else節がある場合） */
+    int has_else;                /* else節があるかどうか */
+} IfBackpatchInfo;
+
 struct CodegenVisitor_tag {
     Visitor        visitor;
     CS_Compiler   *compiler;
@@ -53,6 +75,10 @@ struct CodegenVisitor_tag {
     uint32_t       current_code_size;
     uint32_t       pos;
     uint8_t        *code;
+    
+    /* if文バックパッチ用スタック */
+    IfBackpatchInfo if_stack[MAX_IF_NEST_DEPTH];
+    int             if_stack_top;  /* スタックのトップインデックス */
 };
 
 /* visitor.c */

@@ -51,6 +51,45 @@ static void traverse_stmt_children(Statement* stmt, Visitor* visitor) {
             }
             break;
         }
+        /* ============================================================
+         * IF_STATEMENT の走査処理
+         * ============================================================
+         * if文のバイトコード生成は以下の順序で行う:
+         * 
+         *   1. 条件式を評価 (traverse_expr)
+         *   2. notify_stmt_list[IF_STATEMENT] を呼び出し
+         *      -> JUMP_IF_FALSE命令を生成し、バックパッチ位置を保存
+         *   3. then節を処理 (traverse_stmt)
+         *   4. else節があれば:
+         *      a. notify2_stmt_list[IF_STATEMENT] を呼び出し
+         *         -> JUMP命令を生成（if文の終わりへ）
+         *         -> JUMP_IF_FALSEのジャンプ先をバックパッチ（else節の開始）
+         *      b. else節を処理 (traverse_stmt)
+         *   5. leave_stmt_list[IF_STATEMENT] でJUMPをバックパッチ
+         * ============================================================ */
+        case IF_STATEMENT: {
+            /* 1. 条件式を評価 -> 結果がスタックにプッシュされる */
+            traverse_expr(stmt->u.if_s->condition, visitor);
+            
+            /* 2. notifyを呼び出してJUMP_IF_FALSE命令を生成 */
+            if (visitor->notify_stmt_list && visitor->notify_stmt_list[IF_STATEMENT]) {
+                visitor->notify_stmt_list[IF_STATEMENT](stmt, visitor);
+            }
+            
+            /* 3. then節を走査 */
+            traverse_stmt(stmt->u.if_s->then_block, visitor);
+            
+            /* 4. else節があれば走査 */
+            if (stmt->u.if_s->else_block != NULL) {
+                /* 4a. notify2を呼び出してJUMP命令を生成し、JUMP_IF_FALSEをバックパッチ */
+                if (visitor->notify2_stmt_list && visitor->notify2_stmt_list[IF_STATEMENT]) {
+                    visitor->notify2_stmt_list[IF_STATEMENT](stmt, visitor);
+                }
+                /* 4b. else節を走査 */
+                traverse_stmt(stmt->u.if_s->else_block, visitor);
+            }
+            break;
+        }
         default: {
             fprintf(stderr, "No such stmt->type %d in traverse_stmt_children\n", stmt->type);
         }

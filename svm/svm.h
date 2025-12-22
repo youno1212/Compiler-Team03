@@ -50,7 +50,10 @@ typedef enum {
     SVM_POP,
     SVM_PUSH_FUNCTION,
     SVM_INVOKE,
-    SVM_RETURN
+    SVM_RETURN,
+    /* ジャンプ命令 - if文やwhile文の制御フローに使用 */
+    SVM_JUMP,           /* 無条件ジャンプ: 指定アドレスに無条件で移動 */
+    SVM_JUMP_IF_FALSE   /* 条件付きジャンプ: スタックトップが偽なら指定アドレスにジャンプ */
 } SVM_Opcode;
 
 typedef enum {

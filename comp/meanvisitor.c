@@ -547,6 +547,22 @@ static void leave_blockstmt(Statement* stmt, Visitor* visitor) {
 //    fprintf(stderr, "leave blockstmt\n");
 }
 
+// enter/leave関数を追加
+static void enter_ifstmt(Statement* stmt, Visitor* visitor) {
+    // 何もしない（走査前の処理は不要）
+}
+
+static void leave_ifstmt(Statement* stmt, Visitor* visitor) {
+    // 条件式がboolean型かチェック
+    Expression* condition = stmt->u.if_s->condition;
+    if (condition->type && !cs_is_boolean(condition->type)) {
+        char message[100];
+        sprintf(message, "%d: if condition must be boolean, but got %s",
+                stmt->line_number,
+                get_type_name(condition->type->basic_type));
+        add_check_log(message, visitor);
+    }
+}
 
 MeanVisitor* create_mean_visitor() {
     visit_expr* enter_expr_list;
@@ -561,7 +577,6 @@ MeanVisitor* create_mean_visitor() {
         fprintf(stderr, "Compile is NULL\n");
         exit(1);
     }
-    
     
     
     enter_expr_list = (visit_expr*)MEM_malloc(sizeof(visit_expr) * EXPRESSION_KIND_PLUS_ONE);
@@ -599,7 +614,7 @@ MeanVisitor* create_mean_visitor() {
     enter_stmt_list[EXPRESSION_STATEMENT]     = enter_exprstmt;
     enter_stmt_list[DECLARATION_STATEMENT]    = enter_declstmt;
     enter_stmt_list[BLOCK_STATEMENT]          = enter_blockstmt;  // ← 追加
-    
+    enter_stmt_list[IF_STATEMENT]             = enter_ifstmt;
     
 
     leave_expr_list[BOOLEAN_EXPRESSION]       = leave_boolexpr;
@@ -631,6 +646,7 @@ MeanVisitor* create_mean_visitor() {
     leave_stmt_list[EXPRESSION_STATEMENT]     = leave_exprstmt;
     leave_stmt_list[DECLARATION_STATEMENT]    = leave_declstmt;
     leave_stmt_list[BLOCK_STATEMENT]          = leave_blockstmt;  // ← 追加
+    leave_stmt_list[IF_STATEMENT]             = leave_ifstmt;
     
 
     ((Visitor*)visitor)->enter_expr_list = enter_expr_list;
