@@ -107,6 +107,16 @@ static void disasm(SVM_VirtualMachine* svm) {
             case SVM_PUSH_FUNCTION:
             case SVM_POP:
             case SVM_ADD_INT:
+            /* 比較演算子 */
+            case SVM_GT_INT:
+            case SVM_GE_INT:
+            case SVM_LT_INT:
+            case SVM_LE_INT:
+            case SVM_EQ_INT:
+            case SVM_NE_INT:
+            /* ジャンプ命令 */
+            case SVM_JUMP:
+            case SVM_JUMP_IF_FALSE:
             case SVM_INVOKE: {
 //                printf("%s\n", oinfo->opname);
                 add_opname(&dinfo, oinfo->opname);
@@ -404,6 +414,65 @@ static void svm_run(SVM_VirtualMachine* svm) {
                 push_i(svm, (iv1+iv2));
                 break;
             }
+            /* ============================================================
+             * 比較演算子: if文の条件式で使用
+             * 結果として1（真）または0（偽）をスタックにプッシュ
+             * ============================================================ */
+            case SVM_GT_INT: {  /* Greater Than: > */
+                int iv2 = pop_i(svm);  /* 右辺 */
+                int iv1 = pop_i(svm);  /* 左辺 */
+                push_i(svm, (iv1 > iv2) ? 1 : 0);
+                break;
+            }
+            case SVM_GE_INT: {  /* Greater or Equal: >= */
+                int iv2 = pop_i(svm);
+                int iv1 = pop_i(svm);
+                push_i(svm, (iv1 >= iv2) ? 1 : 0);
+                break;
+            }
+            case SVM_LT_INT: {  /* Less Than: < */
+                int iv2 = pop_i(svm);
+                int iv1 = pop_i(svm);
+                push_i(svm, (iv1 < iv2) ? 1 : 0);
+                break;
+            }
+            case SVM_LE_INT: {  /* Less or Equal: <= */
+                int iv2 = pop_i(svm);
+                int iv1 = pop_i(svm);
+                push_i(svm, (iv1 <= iv2) ? 1 : 0);
+                break;
+            }
+            case SVM_EQ_INT: {  /* Equal: == */
+                int iv2 = pop_i(svm);
+                int iv1 = pop_i(svm);
+                push_i(svm, (iv1 == iv2) ? 1 : 0);
+                break;
+            }
+            case SVM_NE_INT: {  /* Not Equal: != */
+                int iv2 = pop_i(svm);
+                int iv1 = pop_i(svm);
+                push_i(svm, (iv1 != iv2) ? 1 : 0);
+                break;
+            }
+            /* ============================================================
+             * ジャンプ命令: if文やwhile文の制御フローで使用
+             * ============================================================ */
+            case SVM_JUMP: {
+                /* 無条件ジャンプ: 指定されたアドレスにPCを設定 */
+                uint16_t jump_addr = fetch2(svm);
+                svm->pc = jump_addr;
+                break;
+            }
+            case SVM_JUMP_IF_FALSE: {
+                /* 条件付きジャンプ: スタックトップが偽（0）ならジャンプ */
+                uint16_t jump_addr = fetch2(svm);
+                int condition = pop_i(svm);  /* 条件値をポップ */
+                if (condition == 0) {  /* 偽の場合のみジャンプ */
+                    svm->pc = jump_addr;
+                }
+                /* 真の場合は次の命令を実行（何もしない） */
+                break;
+            }
             case SVM_PUSH_FUNCTION: {
                 uint16_t idx = fetch2(svm);
                 push_i(svm, idx);
@@ -495,7 +564,7 @@ int main(int argc, char *argv[]) {
     } else {        
         add_native_functions(svm);        
         init_svm(svm);
-        svm_run(svm);
+        svm_runn(svm);
     }
     
     svm_delete(svm);
