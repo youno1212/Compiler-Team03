@@ -12,6 +12,7 @@ int yylex();
     char                *name;
     Expression          *expression;
     Statement           *statement;
+    StatementList       *statement_list;
     FunctionDeclaration *function_declaration;
     AssignmentOperator   assignment_operator;
     CS_BasicType         type_specifier;
@@ -75,8 +76,12 @@ int yylex();
                  
 %type <assignment_operator> assignment_operator
 %type <type_specifier> type_specifier
-%type <statement> statement declaration_statement
+%type <statement> statement declaration_statement block if_statement 
+%type <statement_list> statement_list
 %type <function_declaration> function_definition
+
+%nonassoc LOWER_THAN_ELSE
+%nonassoc ELSE
 
 %%
 translation_unit
@@ -136,21 +141,35 @@ declaration_statement
         
 block
         : LC statement_list RC
+        {
+            $$ = cs_create_block_statement($2);
+        }
+        | LC RC
+        {
+            $$ = cs_create_block_statement(NULL);
+        }
         ;
 
 statement_list
         : statement
+        {
+            $$ = cs_create_statement_list($1);
+        }
         | statement_list statement
+        {
+            $$ = cs_chain_statement_list($1, $2);
+        }
         ;
 
 if_statement
-        : IF LP expression RP statement else_list
-        | IF LP expression RP statement else_list ELSE statement
-        ;
-
-else_list
-        : /* empty */ 
-        | else_list ELSIF LP expression RP statement
+        : IF LP expression RP statement %prec LOWER_THAN_ELSE
+        {
+            $$ = cs_create_if_statement($3, $5, NULL);
+        }
+        | IF LP expression RP statement ELSE statement
+        {
+            $$ = cs_create_if_statement($3, $5, $7);
+        }
         ;
 
 type_specifier
