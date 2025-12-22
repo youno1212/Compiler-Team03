@@ -352,6 +352,19 @@ static void leave_blockstmt(Statement* stmt, Visitor* visitor) {
     fprintf(stderr, "leave blockstmt\n");
 }
 
+/* If statement */
+static void enter_ifstmt(Statement* stmt, Visitor* visitor) {
+    print_depth();
+    fprintf(stderr, "enter ifstmt :\n");
+    increment();
+}
+
+static void leave_ifstmt(Statement* stmt, Visitor* visitor) {
+    decrement();
+    print_depth();
+    fprintf(stderr, "leave ifstmt\n");
+}
+
 
 Visitor* create_treeview_visitor() {
     visit_expr* enter_expr_list;
@@ -394,7 +407,8 @@ Visitor* create_treeview_visitor() {
     
     enter_stmt_list[EXPRESSION_STATEMENT]     = enter_exprstmt;
     enter_stmt_list[DECLARATION_STATEMENT]    = enter_declstmt;
-    enter_stmt_list[BLOCK_STATEMENT]          = enter_blockstmt;  // ← 追加
+    enter_stmt_list[BLOCK_STATEMENT]          = enter_blockstmt;
+    enter_stmt_list[IF_STATEMENT]             = enter_ifstmt;  /* if文のenter関数を登録 */
     
     
     
@@ -426,7 +440,8 @@ Visitor* create_treeview_visitor() {
     
     leave_stmt_list[EXPRESSION_STATEMENT]     = leave_exprstmt;
     leave_stmt_list[DECLARATION_STATEMENT]    = leave_declstmt;
-    leave_stmt_list[BLOCK_STATEMENT]          = leave_blockstmt;  // ← 追加
+    leave_stmt_list[BLOCK_STATEMENT]          = leave_blockstmt;
+    leave_stmt_list[IF_STATEMENT]             = leave_ifstmt;  /* if文のleave関数を登録 */
     
 
     visitor->enter_expr_list = enter_expr_list;
@@ -434,6 +449,8 @@ Visitor* create_treeview_visitor() {
     visitor->enter_stmt_list = enter_stmt_list;
     visitor->leave_stmt_list = leave_stmt_list;
     visitor->notify_expr_list = NULL;
+    visitor->notify_stmt_list = NULL;   /* treeview visitorでは使用しない */
+    visitor->notify2_stmt_list = NULL;  /* treeview visitorでは使用しない */
             
     
     

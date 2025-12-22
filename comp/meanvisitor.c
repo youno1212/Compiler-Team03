@@ -654,6 +654,8 @@ MeanVisitor* create_mean_visitor() {
     ((Visitor*)visitor)->enter_stmt_list = enter_stmt_list;
     ((Visitor*)visitor)->leave_stmt_list = leave_stmt_list;
     ((Visitor*)visitor)->notify_expr_list = NULL;
+    ((Visitor*)visitor)->notify_stmt_list = NULL;   /* 意味解析では使用しない */
+    ((Visitor*)visitor)->notify2_stmt_list = NULL;  /* 意味解析では使用しない */
             
             
     
