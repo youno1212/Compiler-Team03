@@ -1,0 +1,31 @@
+# Build artifacts
+*.o
+*.a
+*.so
+
+# Parser/Lexer generated files (Root)
+y.tab.c
+y.tab.h
+y.output
+keyword.c
+
+# Parser/Lexer generated files (comp/ directory)
+comp/keyword.c
+comp/y.tab.c
+comp/y.tab.h
+comp/y.output
+comp/a.csb
+
+# Executables
+cgent
+scant
+prst
+treet
+astt
+meant
+memtest
+svm
+disasm
+
+# Temporary files
+*~
