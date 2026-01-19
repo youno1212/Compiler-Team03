@@ -1,0 +1,23 @@
+# Object files
+*.o
+
+# Executables
+cgent
+scant
+prst
+memt
+treet
+astt
+meant
+memtest
+svm
+
+# Generated files
+comp/keyword.c
+comp/y.tab.c
+comp/y.tab.h
+comp/y.output
+comp/a.csb
+
+# Temporary files
+*~
