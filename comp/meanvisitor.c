@@ -232,7 +232,8 @@ static void compare_type_check(Expression* expr, Visitor* visitor) {
     }
     
     if(cs_same_type(left->type, right->type)) {
-        expr->type = cs_create_type_specifier(left->type->basic_type);
+        /* 比較演算子の結果は常にboolean型 */
+        expr->type = cs_create_type_specifier(CS_BOOLEAN_TYPE);
         return;
     } else if(cs_is_int(left->type) && cs_is_double(right->type)) {
         // cast left to double        

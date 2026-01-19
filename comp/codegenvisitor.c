@@ -229,6 +229,22 @@ static void enter_subexpr(Expression* expr, Visitor* visitor) {
 }
 static void leave_subexpr(Expression* expr, Visitor* visitor) {
 //    fprintf(stderr, "leave subexpr\n");
+    /* 減算: スタックの上2つの値を引く（下 - 上） */
+    CodegenVisitor* c_visitor = (CodegenVisitor*)visitor;
+    switch (expr->type->basic_type) {
+        case CS_INT_TYPE: {
+            gen_byte_code(c_visitor, SVM_SUB_INT);
+            break;
+        }
+        case CS_DOUBLE_TYPE: {
+            gen_byte_code(c_visitor, SVM_SUB_DOUBLE);
+            break;
+        }
+        default: {
+            fprintf(stderr, "%d: unknown type in leave_subexpr codegenvisitor\n", expr->line_number);
+            exit(1);
+        }
+    }
 }
 
 static void enter_mulexpr(Expression* expr, Visitor* visitor) {
@@ -286,6 +302,20 @@ static void enter_eqexpr(Expression* expr, Visitor* visitor) {
 }
 static void leave_eqexpr(Expression* expr, Visitor* visitor) {
 //    fprintf(stderr, "leave eqexpr\n");
+    /* == 演算子: スタックトップの2つの値を比較し、等しければ1（真）、そうでなければ0（偽）をプッシュ */
+    CodegenVisitor* c_visitor = (CodegenVisitor*)visitor;
+    switch (expr->u.binary_expression.left->type->basic_type) {
+        case CS_BOOLEAN_TYPE:
+        case CS_INT_TYPE:
+            gen_byte_code(c_visitor, SVM_EQ_INT);
+            break;
+        case CS_DOUBLE_TYPE:
+            gen_byte_code(c_visitor, SVM_EQ_DOUBLE);
+            break;
+        default:
+            fprintf(stderr, "unsupported type for == operator\n");
+            exit(1);
+    }
 }
 
 static void enter_neexpr(Expression* expr, Visitor* visitor) {
@@ -293,6 +323,20 @@ static void enter_neexpr(Expression* expr, Visitor* visitor) {
 }
 static void leave_neexpr(Expression* expr, Visitor* visitor) {
 //    fprintf(stderr, "leave neexpr\n");
+    /* != 演算子: スタックトップの2つの値を比較し、等しくなければ1（真）、等しければ0（偽）をプッシュ */
+    CodegenVisitor* c_visitor = (CodegenVisitor*)visitor;
+    switch (expr->u.binary_expression.left->type->basic_type) {
+        case CS_BOOLEAN_TYPE:
+        case CS_INT_TYPE:
+            gen_byte_code(c_visitor, SVM_NE_INT);
+            break;
+        case CS_DOUBLE_TYPE:
+            gen_byte_code(c_visitor, SVM_NE_DOUBLE);
+            break;
+        default:
+            fprintf(stderr, "unsupported type for != operator\n");
+            exit(1);
+    }
 }
 
 static void enter_landexpr(Expression* expr, Visitor* visitor) {
@@ -399,6 +443,25 @@ static void enter_declstmt(Statement* stmt, Visitor* visitor) {
 
 static void leave_declstmt(Statement* stmt, Visitor* visitor) {
 //    fprintf(stderr, "leave declstmt\n");
+    /* 宣言文: 初期化式の値をスタックからポップして変数に格納 */
+    CodegenVisitor* c_visitor = (CodegenVisitor*)visitor;
+    if (stmt->u.declaration_s->initializer != NULL) {
+        /* 初期化式がある場合、値を変数に格納 */
+        switch (stmt->u.declaration_s->type->basic_type) {
+            case CS_BOOLEAN_TYPE:
+            case CS_INT_TYPE:
+                gen_byte_code(c_visitor, SVM_POP_STATIC_INT,
+                        stmt->u.declaration_s->index);
+                break;
+            case CS_DOUBLE_TYPE:
+                gen_byte_code(c_visitor, SVM_POP_STATIC_DOUBLE,
+                        stmt->u.declaration_s->index);
+                break;
+            default:
+                fprintf(stderr, "unsupported type in leave_declstmt\n");
+                exit(1);
+        }
+    }
 }
 
 /* Block statement */

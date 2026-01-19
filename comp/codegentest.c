@@ -274,6 +274,17 @@ static void exec_disasm(CS_Executable* exec) {
             case SVM_PUSH_FUNCTION:
             case SVM_POP:
             case SVM_ADD_INT:
+            case SVM_SUB_INT:
+            /* 比較演算子 */
+            case SVM_EQ_INT:
+            case SVM_NE_INT:
+            case SVM_GT_INT:
+            case SVM_GE_INT:
+            case SVM_LT_INT:
+            case SVM_LE_INT:
+            /* ジャンプ命令 */
+            case SVM_JUMP:
+            case SVM_JUMP_IF_FALSE:
             case SVM_INVOKE: {
                 add_string(&dinfo, oinfo->opname);
                 break;
