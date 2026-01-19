@@ -305,6 +305,7 @@ static void leave_eqexpr(Expression* expr, Visitor* visitor) {
     /* == 演算子: スタックトップの2つの値を比較し、等しければ1（真）、そうでなければ0（偽）をプッシュ */
     CodegenVisitor* c_visitor = (CodegenVisitor*)visitor;
     switch (expr->u.binary_expression.left->type->basic_type) {
+        case CS_BOOLEAN_TYPE:
         case CS_INT_TYPE:
             gen_byte_code(c_visitor, SVM_EQ_INT);
             break;
@@ -325,6 +326,7 @@ static void leave_neexpr(Expression* expr, Visitor* visitor) {
     /* != 演算子: スタックトップの2つの値を比較し、等しくなければ1（真）、等しければ0（偽）をプッシュ */
     CodegenVisitor* c_visitor = (CodegenVisitor*)visitor;
     switch (expr->u.binary_expression.left->type->basic_type) {
+        case CS_BOOLEAN_TYPE:
         case CS_INT_TYPE:
             gen_byte_code(c_visitor, SVM_NE_INT);
             break;
