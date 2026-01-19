@@ -1,0 +1,20 @@
+# Build artifacts
+*.o
+*.a
+*.so
+y.tab.c
+y.tab.h
+y.output
+keyword.c
+
+# Executables
+scant
+prst
+memt
+treet
+astt
+meant
+cgent
+memtest
+svm
+disasm

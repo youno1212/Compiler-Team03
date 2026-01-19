@@ -107,6 +107,7 @@ static void disasm(SVM_VirtualMachine* svm) {
             case SVM_PUSH_FUNCTION:
             case SVM_POP:
             case SVM_ADD_INT:
+            case SVM_SUB_INT:
             /* 比較演算子 */
             case SVM_GT_INT:
             case SVM_GE_INT:
@@ -412,6 +413,12 @@ static void svm_run(SVM_VirtualMachine* svm) {
                 int iv1 = pop_i(svm);
                 int iv2 = pop_i(svm);
                 push_i(svm, (iv1+iv2));
+                break;
+            }
+            case SVM_SUB_INT: {  /* 減算: i - 1 などで使用 */
+                int iv2 = pop_i(svm);  /* 右辺（引く数） */
+                int iv1 = pop_i(svm);  /* 左辺（引かれる数） */
+                push_i(svm, (iv1 - iv2));
                 break;
             }
             /* ============================================================
