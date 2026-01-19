@@ -3,18 +3,25 @@
 *.a
 *.so
 
+# CodeQL / tooling artifacts
+_codeql_detected_source_root
+
+# VM bytecode artifacts
+*.csb
+a.csb
+comp/a.csb
+svm/a.csb
+
 # Parser/Lexer generated files (Root)
 y.tab.c
 y.tab.h
 y.output
 keyword.c
-
 # Parser/Lexer generated files (comp/ directory)
 comp/keyword.c
 comp/y.tab.c
 comp/y.tab.h
 comp/y.output
-comp/a.csb
 
 # Executables
 cgent
@@ -23,9 +30,11 @@ prst
 treet
 astt
 meant
-memtest
 svm
 disasm
+
+# Tests / helper binaries
+memtest
 
 # Temporary files
 *~
