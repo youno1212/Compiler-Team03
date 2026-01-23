@@ -163,7 +163,7 @@ typedef enum
     EXPRESSION_STATEMENT = 1,
     DECLARATION_STATEMENT,
     BLOCK_STATEMENT,
-    IF_STATEMENT, 
+    IF_STATEMENT,
     WHILE_STATEMENT,
     STATEMENT_TYPE_COUNT_PLUS_ONE
 } StatementType;
@@ -179,6 +179,12 @@ typedef struct
     Statement *then_block;
     Statement *else_block; // NULLの場合あり
 } IfStatement;
+
+typedef struct
+{
+    Expression *condition;
+    Statement *body;
+} WhileStatement;
 
 struct Statement_tag
 {
@@ -290,9 +296,9 @@ TypeSpecifier *cs_create_type_specifier(CS_BasicType type);
 FunctionDeclaration *cs_create_function_declaration(CS_BasicType type, char *name);
 FunctionDeclarationList *cs_create_function_declaration_list(FunctionDeclaration *func);
 
-Statement* cs_create_block_statement(StatementList* stmt_list);
+Statement *cs_create_block_statement(StatementList *stmt_list);
 
-Statement* cs_create_if_statement(Expression* condition, Statement* then_block, Statement* else_block);
+Statement *cs_create_if_statement(Expression *condition, Statement *then_block, Statement *else_block);
 
 /* interface.c */
 CS_Compiler *CS_create_compiler();
