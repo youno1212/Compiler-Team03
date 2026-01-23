@@ -1,9 +1,8 @@
 int i = 0;
-int j = 1;
-if (i == j)
-{
-    i = i + 1;
-}
 
-while(i == i){
+while(1){
+    print();
+    int a;
+    a = 3;
+    int b = 4;
 }
