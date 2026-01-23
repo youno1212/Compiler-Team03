@@ -173,6 +173,13 @@ if_statement
         }
         ;
 
+while_statement
+        : WHILE LP expression RP statement
+        {
+                $$ = cs_create_while_statement($3, $5);
+        }
+        ;
+
 type_specifier
         : BOOLEAN_T { $$ = CS_BOOLEAN_TYPE; }
         | INT_T     { $$ = CS_INT_TYPE;     }
