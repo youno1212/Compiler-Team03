@@ -301,6 +301,8 @@ Statement *cs_create_block_statement(StatementList *stmt_list);
 
 Statement *cs_create_if_statement(Expression *condition, Statement *then_block, Statement *else_block);
 
+Statement *cs_create_while_statement(Expression *condition, Statement *body);
+
 /* interface.c */
 CS_Compiler *CS_create_compiler();
 CS_Boolean CS_compile(CS_Compiler *compiler, FILE *fin);
