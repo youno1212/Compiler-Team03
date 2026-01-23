@@ -565,6 +565,22 @@ static void leave_ifstmt(Statement* stmt, Visitor* visitor) {
     }
 }
 
+static void enter_whilestmt(Statement *stmt, Visitor *visitor) {
+    // 事前処理は不要
+}
+
+static void leave_whilestmt(Statement *stmt, Visitor *visitor) {
+    Expression *condition = stmt->u.while_s->condition;
+    if (condition->type && !cs_is_boolean(condition->type)) {
+        char message[100];
+        sprintf(message,
+                "%d: while condition must be boolean, but got %s",
+                stmt->line_number,
+                get_type_name(condition->type->basic_type));
+        add_check_log(message, visitor);
+    }
+}
+
 MeanVisitor* create_mean_visitor() {
     visit_expr* enter_expr_list;
     visit_expr* leave_expr_list;

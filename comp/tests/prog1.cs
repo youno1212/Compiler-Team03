@@ -4,15 +4,6 @@ if (i == j)
 {
     i = i + 1;
 }
-else if (i != j)
-{
-    i = i - 1;
-}
-else if (i != j)
-{
-    i = i - 1;
-}
-else if (i != j)
-{
-    i = i - 1;
+
+while(1){
 }
