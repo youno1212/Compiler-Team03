@@ -126,6 +126,7 @@ statement
         | declaration_statement { /*printf("declaration_statement\n"); */}
 	| block
         | if_statement
+        | while_statement
         ;
         
 declaration_statement
