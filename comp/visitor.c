@@ -422,7 +422,7 @@ Visitor* create_treeview_visitor() {
     enter_stmt_list[DECLARATION_STATEMENT]    = enter_declstmt;
     enter_stmt_list[BLOCK_STATEMENT]          = enter_blockstmt;
     enter_stmt_list[IF_STATEMENT]             = enter_ifstmt;  /* if文のenter関数を登録 */
-    
+    enter_stmt_list[WHILE_STATEMENT]          = enter_whilestmt; /* if文のenter関数を登録 */
     
     
     leave_expr_list[BOOLEAN_EXPRESSION]       = leave_boolexpr;
@@ -455,7 +455,7 @@ Visitor* create_treeview_visitor() {
     leave_stmt_list[DECLARATION_STATEMENT]    = leave_declstmt;
     leave_stmt_list[BLOCK_STATEMENT]          = leave_blockstmt;
     leave_stmt_list[IF_STATEMENT]             = leave_ifstmt;  /* if文のleave関数を登録 */
-    
+    leave_stmt_list[WHILE_STATEMENT]          = leave_whilestmt; /* while文のleave関数を登録 */
 
     visitor->enter_expr_list = enter_expr_list;
     visitor->leave_expr_list = leave_expr_list;
