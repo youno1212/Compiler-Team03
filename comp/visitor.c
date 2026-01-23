@@ -365,6 +365,19 @@ static void leave_ifstmt(Statement* stmt, Visitor* visitor) {
     fprintf(stderr, "leave ifstmt\n");
 }
 
+/* While statement */
+static void enter_whilestmt(Statement* stmt, Visitor* visitor) {
+    print_depth();
+    fprintf(stderr, "enter whilestmt :\n");
+    increment();
+}
+
+static void leave_whilestmt(Statement* stmt, Visitor* visitor) {
+    decrement();
+    print_depth();
+    fprintf(stderr, "leave whilestmt\n");
+}
+
 
 Visitor* create_treeview_visitor() {
     visit_expr* enter_expr_list;
