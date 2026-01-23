@@ -195,7 +195,8 @@ struct Statement_tag
         Expression *expression_s;
         Declaration *declaration_s;
         BlockStatement *block_s;
-        IfStatement *if_s; // ← 追加
+        IfStatement *if_s;
+        WhileStatement *while_s;
     } u;
 };
 
