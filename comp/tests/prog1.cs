@@ -1,8 +1,4 @@
-int i = 0;
-
-while(1){
-    print();
-    int a;
-    a = 3;
-    int b = 4;
+while (true) {
+    int a = 1;
 }
+a = 2;
