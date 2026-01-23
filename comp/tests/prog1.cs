@@ -5,5 +5,5 @@ if (i == j)
     i = i + 1;
 }
 
-while(1){
+while(i == i){
 }

@@ -632,7 +632,8 @@ MeanVisitor* create_mean_visitor() {
     enter_stmt_list[DECLARATION_STATEMENT]    = enter_declstmt;
     enter_stmt_list[BLOCK_STATEMENT]          = enter_blockstmt;  // ← 追加
     enter_stmt_list[IF_STATEMENT]             = enter_ifstmt;
-    
+    enter_stmt_list[WHILE_STATEMENT]          = enter_whilestmt;
+
 
     leave_expr_list[BOOLEAN_EXPRESSION]       = leave_boolexpr;
     leave_expr_list[INT_EXPRESSION]           = leave_intexpr;
@@ -664,7 +665,8 @@ MeanVisitor* create_mean_visitor() {
     leave_stmt_list[DECLARATION_STATEMENT]    = leave_declstmt;
     leave_stmt_list[BLOCK_STATEMENT]          = leave_blockstmt;  // ← 追加
     leave_stmt_list[IF_STATEMENT]             = leave_ifstmt;
-    
+    leave_stmt_list[WHILE_STATEMENT]          = leave_whilestmt;
+
 
     ((Visitor*)visitor)->enter_expr_list = enter_expr_list;
     ((Visitor*)visitor)->leave_expr_list = leave_expr_list;
