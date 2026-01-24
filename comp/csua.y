@@ -76,7 +76,7 @@ int yylex();
                  
 %type <assignment_operator> assignment_operator
 %type <type_specifier> type_specifier
-%type <statement> statement declaration_statement block if_statement 
+%type <statement> statement declaration_statement block if_statement while_statement
 %type <statement_list> statement_list
 %type <function_declaration> function_definition
 
@@ -126,6 +126,7 @@ statement
         | declaration_statement { /*printf("declaration_statement\n"); */}
 	| block
         | if_statement
+        | while_statement
         ;
         
 declaration_statement
@@ -169,6 +170,13 @@ if_statement
         | IF LP expression RP statement ELSE statement
         {
             $$ = cs_create_if_statement($3, $5, $7);
+        }
+        ;
+
+while_statement
+        : WHILE LP expression RP statement
+        {
+                $$ = cs_create_while_statement($3, $5);
         }
         ;
 

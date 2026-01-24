@@ -565,6 +565,22 @@ static void leave_ifstmt(Statement* stmt, Visitor* visitor) {
     }
 }
 
+static void enter_whilestmt(Statement *stmt, Visitor *visitor) {
+    // 事前処理は不要
+}
+
+static void leave_whilestmt(Statement *stmt, Visitor *visitor) {
+    Expression *condition = stmt->u.while_s->condition;
+    if (condition->type && !cs_is_boolean(condition->type)) {
+        char message[100];
+        sprintf(message,
+                "%d: while condition must be boolean, but got %s",
+                stmt->line_number,
+                get_type_name(condition->type->basic_type));
+        add_check_log(message, visitor);
+    }
+}
+
 MeanVisitor* create_mean_visitor() {
     visit_expr* enter_expr_list;
     visit_expr* leave_expr_list;
@@ -616,7 +632,8 @@ MeanVisitor* create_mean_visitor() {
     enter_stmt_list[DECLARATION_STATEMENT]    = enter_declstmt;
     enter_stmt_list[BLOCK_STATEMENT]          = enter_blockstmt;  // ← 追加
     enter_stmt_list[IF_STATEMENT]             = enter_ifstmt;
-    
+    enter_stmt_list[WHILE_STATEMENT]          = enter_whilestmt;
+
 
     leave_expr_list[BOOLEAN_EXPRESSION]       = leave_boolexpr;
     leave_expr_list[INT_EXPRESSION]           = leave_intexpr;
@@ -648,7 +665,8 @@ MeanVisitor* create_mean_visitor() {
     leave_stmt_list[DECLARATION_STATEMENT]    = leave_declstmt;
     leave_stmt_list[BLOCK_STATEMENT]          = leave_blockstmt;  // ← 追加
     leave_stmt_list[IF_STATEMENT]             = leave_ifstmt;
-    
+    leave_stmt_list[WHILE_STATEMENT]          = leave_whilestmt;
+
 
     ((Visitor*)visitor)->enter_expr_list = enter_expr_list;
     ((Visitor*)visitor)->leave_expr_list = leave_expr_list;

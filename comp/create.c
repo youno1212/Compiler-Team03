@@ -230,4 +230,14 @@ Statement* cs_create_if_statement(Expression* condition, Statement* then_block, 
     return stmt;
 }
 
+Statement* cs_create_while_statement(Expression *condition, Statement *body){
+    Statement *stmt = cs_create_statement(WHILE_STATEMENT);
+
+    WhileStatement *whilestmt = (WhileStatement*)cs_malloc(sizeof(WhileStatement));
+    whilestmt->condition = condition;
+    whilestmt->body = body;
+
+    stmt->u.while_s = whilestmt;
+    return stmt;
+}
 

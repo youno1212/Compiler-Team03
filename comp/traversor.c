@@ -90,6 +90,22 @@ static void traverse_stmt_children(Statement* stmt, Visitor* visitor) {
             }
             break;
         }
+        case WHILE_STATEMENT: {
+            /* 1. 条件式を評価 */
+            traverse_expr(stmt->u.while_s->condition, visitor);
+
+            /* 2. notify（ループ開始用） */
+            if (visitor->notify_stmt_list && visitor->notify_stmt_list[WHILE_STATEMENT]) {
+                visitor->notify_stmt_list[WHILE_STATEMENT](stmt, visitor);
+            }
+
+            /* 3. 本体 */
+            traverse_stmt(stmt->u.while_s->body, visitor);
+
+            /* 4. leaveでループ末尾処理 */
+            break;
+}
+
         default: {
             fprintf(stderr, "No such stmt->type %d in traverse_stmt_children\n", stmt->type);
         }
