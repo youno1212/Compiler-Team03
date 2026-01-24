@@ -19,8 +19,8 @@ static void gen_byte_code(CodegenVisitor* visitor, SVM_Opcode op, ...) {
     va_start(ap, op);
     
     OpcodeInfo oInfo = svm_opcode_info[op];
-    printf("-->%s\n", oInfo.opname);
-    printf("-->%s\n", oInfo.parameter);
+    // printf("-->%s\n", oInfo.opname);
+    // printf("-->%s\n", oInfo.parameter);
     
     // pos + 1byte + operator (1byte) + operand_size
     if ((visitor->pos + 1 + 1 + (get_opsize(&oInfo))) > visitor->current_code_size) {
@@ -85,6 +85,12 @@ static void enter_boolexpr(Expression* expr, Visitor* visitor) {
 }
 static void leave_boolexpr(Expression* expr, Visitor* visitor) {
 //    fprintf(stderr, "leave boolexpr\n");
+    CS_Executable* exec = ((CodegenVisitor*)visitor)->exec;
+    CS_ConstantPool cp;
+    cp.type = CS_CONSTANT_INT;
+    cp.u.c_int = expr->u.boolean_value;
+    int idx = add_constant(exec, &cp);
+    gen_byte_code((CodegenVisitor*)visitor, SVM_PUSH_INT, idx);
 }
 
 
@@ -252,6 +258,18 @@ static void enter_mulexpr(Expression* expr, Visitor* visitor) {
 }
 static void leave_mulexpr(Expression* expr, Visitor* visitor) {
 //    fprintf(stderr, "leave mulexpr\n");
+    CodegenVisitor* c_visitor = (CodegenVisitor*)visitor;
+    switch (expr->u.binary_expression.left->type->basic_type) {
+        case CS_INT_TYPE:
+            gen_byte_code(c_visitor, SVM_MUL_INT);
+            break;
+        case CS_DOUBLE_TYPE:
+            gen_byte_code(c_visitor, SVM_MUL_DOUBLE);
+            break;
+        default:
+            fprintf(stderr, "unsupported type for * operator\n");
+            exit(1);
+    }
 }
 
 static void enter_divexpr(Expression* expr, Visitor* visitor) {
@@ -259,6 +277,18 @@ static void enter_divexpr(Expression* expr, Visitor* visitor) {
 }
 static void leave_divexpr(Expression* expr, Visitor* visitor) {
 //    fprintf(stderr, "leave divexpr\n");
+    CodegenVisitor* c_visitor = (CodegenVisitor*)visitor;
+    switch (expr->u.binary_expression.left->type->basic_type) {
+        case CS_INT_TYPE:
+            gen_byte_code(c_visitor, SVM_DIV_INT);
+            break;
+        case CS_DOUBLE_TYPE:
+            gen_byte_code(c_visitor, SVM_DIV_DOUBLE);
+            break;
+        default:
+            fprintf(stderr, "unsupported type for / operator\n");
+            exit(1);
+    }
 }
 
 static void enter_modexpr(Expression* expr, Visitor* visitor) {
@@ -266,6 +296,18 @@ static void enter_modexpr(Expression* expr, Visitor* visitor) {
 }
 static void leave_modexpr(Expression* expr, Visitor* visitor) {
 //    fprintf(stderr, "leave modexpr\n");
+    CodegenVisitor* c_visitor = (CodegenVisitor*)visitor;
+    switch (expr->u.binary_expression.left->type->basic_type) {
+        case CS_INT_TYPE:
+            gen_byte_code(c_visitor, SVM_MOD_INT);
+            break;
+        case CS_DOUBLE_TYPE:
+            gen_byte_code(c_visitor, SVM_MOD_DOUBLE);
+            break;
+        default:
+            fprintf(stderr, "unsupported type for %% operator\n");
+            exit(1);
+    }
 }
 
 
@@ -274,6 +316,19 @@ static void enter_gtexpr(Expression* expr, Visitor* visitor) {
 }
 static void leave_gtexpr(Expression* expr, Visitor* visitor) {
 //    fprintf(stderr, "leave gtexpr\n");
+    CodegenVisitor* c_visitor = (CodegenVisitor*)visitor;
+    switch (expr->u.binary_expression.left->type->basic_type) {
+        case CS_BOOLEAN_TYPE:
+        case CS_INT_TYPE:
+            gen_byte_code(c_visitor, SVM_GT_INT);
+            break;
+        case CS_DOUBLE_TYPE:
+            gen_byte_code(c_visitor, SVM_GT_DOUBLE);
+            break;
+        default:
+            fprintf(stderr, "unsupported type for > operator\n");
+            exit(1);
+    }
 }
 
 static void enter_geexpr(Expression* expr, Visitor* visitor) {
@@ -281,6 +336,19 @@ static void enter_geexpr(Expression* expr, Visitor* visitor) {
 }
 static void leave_geexpr(Expression* expr, Visitor* visitor) {
 //    fprintf(stderr, "leave geexpr\n");
+    CodegenVisitor* c_visitor = (CodegenVisitor*)visitor;
+    switch (expr->u.binary_expression.left->type->basic_type) {
+        case CS_BOOLEAN_TYPE:
+        case CS_INT_TYPE:
+            gen_byte_code(c_visitor, SVM_GE_INT);
+            break;
+        case CS_DOUBLE_TYPE:
+            gen_byte_code(c_visitor, SVM_GE_DOUBLE);
+            break;
+        default:
+            fprintf(stderr, "unsupported type for >= operator\n");
+            exit(1);
+    }
 }
 
 static void enter_ltexpr(Expression* expr, Visitor* visitor) {
@@ -288,6 +356,19 @@ static void enter_ltexpr(Expression* expr, Visitor* visitor) {
 }
 static void leave_ltexpr(Expression* expr, Visitor* visitor) {
 //    fprintf(stderr, "leave ltexpr\n");
+    CodegenVisitor* c_visitor = (CodegenVisitor*)visitor;
+    switch (expr->u.binary_expression.left->type->basic_type) {
+        case CS_BOOLEAN_TYPE:
+        case CS_INT_TYPE:
+            gen_byte_code(c_visitor, SVM_LT_INT);
+            break;
+        case CS_DOUBLE_TYPE:
+            gen_byte_code(c_visitor, SVM_LT_DOUBLE);
+            break;
+        default:
+            fprintf(stderr, "unsupported type for < operator\n");
+            exit(1);
+    }
 }
 
 static void enter_leexpr(Expression* expr, Visitor* visitor) {
@@ -295,6 +376,19 @@ static void enter_leexpr(Expression* expr, Visitor* visitor) {
 }
 static void leave_leexpr(Expression* expr, Visitor* visitor) {
 //    fprintf(stderr, "leave leexpr\n");
+    CodegenVisitor* c_visitor = (CodegenVisitor*)visitor;
+    switch (expr->u.binary_expression.left->type->basic_type) {
+        case CS_BOOLEAN_TYPE:
+        case CS_INT_TYPE:
+            gen_byte_code(c_visitor, SVM_LE_INT);
+            break;
+        case CS_DOUBLE_TYPE:
+            gen_byte_code(c_visitor, SVM_LE_DOUBLE);
+            break;
+        default:
+            fprintf(stderr, "unsupported type for <= operator\n");
+            exit(1);
+    }
 }
 
 static void enter_eqexpr(Expression* expr, Visitor* visitor) {
@@ -344,6 +438,7 @@ static void enter_landexpr(Expression* expr, Visitor* visitor) {
 }
 static void leave_landexpr(Expression* expr, Visitor* visitor) {
 //    fprintf(stderr, "leave landexpr\n");
+    gen_byte_code((CodegenVisitor*)visitor, SVM_LOGICAL_AND);
 }
 
 static void enter_lorexpr(Expression* expr, Visitor* visitor) {
@@ -351,6 +446,7 @@ static void enter_lorexpr(Expression* expr, Visitor* visitor) {
 }
 static void leave_lorexpr(Expression* expr, Visitor* visitor) {
 //    fprintf(stderr, "leave lorexpr\n");
+    gen_byte_code((CodegenVisitor*)visitor, SVM_LOGICAL_OR);
 }
 
 static void enter_incexpr(Expression* expr, Visitor* visitor) {
@@ -372,6 +468,18 @@ static void enter_minusexpr(Expression* expr, Visitor* visitor) {
 }
 static void leave_minusexpr(Expression* expr, Visitor* visitor) {
 //    fprintf(stderr, "leave minusexpr\n");
+    CodegenVisitor* c_visitor = (CodegenVisitor*)visitor;
+    switch (expr->type->basic_type) {
+        case CS_INT_TYPE:
+            gen_byte_code(c_visitor, SVM_MINUS_INT);
+            break;
+        case CS_DOUBLE_TYPE:
+            gen_byte_code(c_visitor, SVM_MINUS_DOUBLE);
+            break;
+        default:
+            fprintf(stderr, "unsupported type for unary - operator\n");
+            exit(1);
+    }
 }
 
 static void enter_lognotexpr(Expression* expr, Visitor* visitor) {
@@ -379,6 +487,7 @@ static void enter_lognotexpr(Expression* expr, Visitor* visitor) {
 }
 static void leave_lognotexpr(Expression* expr, Visitor* visitor) {
 //    fprintf(stderr, "leave lognotexpr\n");
+    gen_byte_code((CodegenVisitor*)visitor, SVM_LOGICAL_NOT);
 }
 
 static void enter_assignexpr(Expression* expr, Visitor* visitor) {

@@ -275,6 +275,10 @@ static void exec_disasm(CS_Executable* exec) {
             case SVM_POP:
             case SVM_ADD_INT:
             case SVM_SUB_INT:
+            case SVM_MUL_INT:
+            case SVM_DIV_INT:
+            case SVM_MOD_INT:
+            case SVM_MINUS_INT:
             /* 比較演算子 */
             case SVM_EQ_INT:
             case SVM_NE_INT:
@@ -282,6 +286,10 @@ static void exec_disasm(CS_Executable* exec) {
             case SVM_GE_INT:
             case SVM_LT_INT:
             case SVM_LE_INT:
+            /* 論理演算子 */
+            case SVM_LOGICAL_AND:
+            case SVM_LOGICAL_OR:
+            case SVM_LOGICAL_NOT:
             /* ジャンプ命令 */
             case SVM_JUMP:
             case SVM_JUMP_IF_FALSE:
