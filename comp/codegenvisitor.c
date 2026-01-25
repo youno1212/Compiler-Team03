@@ -725,6 +725,56 @@ static void leave_ifstmt(Statement* stmt, Visitor* visitor) {
     cv->if_stack_top--;
 }
 
+/* ============================================================
+ * While statement のバイトコード生成
+ * ============================================================
+ *
+ * while文のバイトコード構造:
+ *
+ * loop_start:
+ *   [条件式のバイトコード]
+ *   JUMP_IF_FALSE loop_end
+ *   [ループ本体のバイトコード]
+ *   JUMP loop_start
+ * loop_end:
+ *   [ループの次の処理]
+ * ============================================================ */
+
+static void enter_whilestmt(Statement* stmt, Visitor* visitor) {
+    CodegenVisitor* cv = (CodegenVisitor*)visitor;
+    cv->while_stack_top++;
+
+    if (cv->while_stack_top >= MAX_WHILE_NEST_DEPTH) {
+        fprintf(stderr, "Error: while statement nesting too deep\n");
+        exit(1);
+    }
+
+    /* ループ開始位置をスタックに保存 */
+    cv->while_stack[cv->while_stack_top].loop_start_pos = get_current_pos(cv);
+}
+
+static void notify_whilestmt(Statement* stmt, Visitor* visitor) {
+    CodegenVisitor* cv = (CodegenVisitor*)visitor;
+
+    /* JUMP_IF_FALSE命令を生成し、オペランド位置を保存 */
+    cv->while_stack[cv->while_stack_top].jump_if_false_pos = gen_jump_code(cv, SVM_JUMP_IF_FALSE);
+}
+
+static void leave_whilestmt(Statement* stmt, Visitor* visitor) {
+    CodegenVisitor* cv = (CodegenVisitor*)visitor;
+
+    /* ループの開始地点へ戻るJUMP命令を生成 */
+    uint32_t loop_start = cv->while_stack[cv->while_stack_top].loop_start_pos;
+    gen_byte_code(cv, SVM_JUMP, loop_start);
+
+    /* JUMP_IF_FALSEのジャンプ先を現在位置（ループの終わり）にバックパッチ */
+    uint32_t loop_end = get_current_pos(cv);
+    backpatch(cv, cv->while_stack[cv->while_stack_top].jump_if_false_pos, loop_end);
+
+    /* スタックをポップ */
+    cv->while_stack_top--;
+}
+
 CodegenVisitor* create_codegen_visitor(CS_Compiler* compiler, CS_Executable *exec) {
     visit_expr* enter_expr_list;
     visit_expr* leave_expr_list;
@@ -752,6 +802,9 @@ CodegenVisitor* create_codegen_visitor(CS_Compiler* compiler, CS_Executable *exe
     
     /* if文バックパッチ用スタックの初期化 */
     visitor->if_stack_top = -1;  /* スタックは空の状態 */
+
+    /* while文バックパッチ用スタックの初期化 */
+    visitor->while_stack_top = -1; /* スタックは空の状態 */
 
     enter_expr_list = (visit_expr*)MEM_malloc(sizeof(visit_expr) * EXPRESSION_KIND_PLUS_ONE);
     leave_expr_list = (visit_expr*)MEM_malloc(sizeof(visit_expr) * EXPRESSION_KIND_PLUS_ONE);
@@ -800,11 +853,13 @@ CodegenVisitor* create_codegen_visitor(CS_Compiler* compiler, CS_Executable *exe
     enter_stmt_list[DECLARATION_STATEMENT]    = enter_declstmt;
     enter_stmt_list[BLOCK_STATEMENT]          = enter_blockstmt;
     enter_stmt_list[IF_STATEMENT]             = enter_ifstmt;  /* if文のenter関数を登録 */
+    enter_stmt_list[WHILE_STATEMENT]          = enter_whilestmt;
     
     notify_expr_list[ASSIGN_EXPRESSION]       = notify_assignexpr;
     
     /* if文: 条件式評価後にJUMP_IF_FALSE命令を生成するためのnotify関数 */
     notify_stmt_list[IF_STATEMENT]            = notify_ifstmt;
+    notify_stmt_list[WHILE_STATEMENT]         = notify_whilestmt;
     
     /* if文: then節終了後にJUMP命令を生成し、JUMP_IF_FALSEをバックパッチするnotify2関数 */
     notify2_stmt_list[IF_STATEMENT]           = notify2_ifstmt;
@@ -826,8 +881,8 @@ CodegenVisitor* create_codegen_visitor(CS_Compiler* compiler, CS_Executable *exe
     leave_expr_list[LE_EXPRESSION]            = leave_leexpr;
     leave_expr_list[EQ_EXPRESSION]            = leave_eqexpr;
     leave_expr_list[NE_EXPRESSION]            = leave_neexpr;
-    leave_expr_list[LOGICAL_AND_EXPRESSION]   = leave_landexpr;
-    leave_expr_list[LOGICAL_OR_EXPRESSION]    = leave_lorexpr;
+    leave_expr_list[LOGICAL_AND_EXPRESSION]   = enter_landexpr;
+    leave_expr_list[LOGICAL_OR_EXPRESSION]    = enter_lorexpr;
     leave_expr_list[INCREMENT_EXPRESSION]     = leave_incexpr;
     leave_expr_list[DECREMENT_EXPRESSION]     = leave_decexpr;
     leave_expr_list[DECREMENT_EXPRESSION]     = leave_decexpr;
@@ -841,6 +896,7 @@ CodegenVisitor* create_codegen_visitor(CS_Compiler* compiler, CS_Executable *exe
     leave_stmt_list[DECLARATION_STATEMENT]    = leave_declstmt;
     leave_stmt_list[BLOCK_STATEMENT]          = leave_blockstmt;
     leave_stmt_list[IF_STATEMENT]             = leave_ifstmt;  /* if文のleave関数を登録 */
+    leave_stmt_list[WHILE_STATEMENT]          = leave_whilestmt;
     
     
     ((Visitor*)visitor)->enter_expr_list = enter_expr_list;

@@ -63,6 +63,17 @@ typedef struct {
     int has_else;                /* else節があるかどうか */
 } IfBackpatchInfo;
 
+/* ============================================================
+ * while文のバックパッチ情報を保存するスタック
+ * ============================================================ */
+#define MAX_WHILE_NEST_DEPTH 64 /* while文の最大ネスト深度 */
+
+typedef struct {
+    uint32_t loop_start_pos;      /* ループ開始位置 */
+    uint32_t jump_if_false_pos;   /* JUMP_IF_FALSEのオペランド位置 */
+} WhileBackpatchInfo;
+
+
 struct CodegenVisitor_tag {
     Visitor        visitor;
     CS_Compiler   *compiler;
@@ -79,6 +90,10 @@ struct CodegenVisitor_tag {
     /* if文バックパッチ用スタック */
     IfBackpatchInfo if_stack[MAX_IF_NEST_DEPTH];
     int             if_stack_top;  /* スタックのトップインデックス */
+
+    /* while文バックパッチ用スタック */
+    WhileBackpatchInfo while_stack[MAX_WHILE_NEST_DEPTH];
+    int                while_stack_top; /* スタックのトップインデックス */
 };
 
 /* visitor.c */
