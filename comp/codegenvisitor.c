@@ -751,6 +751,8 @@ static void enter_whilestmt(Statement* stmt, Visitor* visitor) {
 
     /* ループ開始位置をスタックに保存 */
     cv->while_stack[cv->while_stack_top].loop_start_pos = get_current_pos(cv);
+    cv->while_stack[cv->while_stack_top].break_jumps_count = 0;
+    cv->while_stack[cv->while_stack_top].continue_jumps_count = 0;
 }
 
 static void notify_whilestmt(Statement* stmt, Visitor* visitor) {
@@ -771,8 +773,52 @@ static void leave_whilestmt(Statement* stmt, Visitor* visitor) {
     uint32_t loop_end = get_current_pos(cv);
     backpatch(cv, cv->while_stack[cv->while_stack_top].jump_if_false_pos, loop_end);
 
+    // break文のバックパッチ
+    for (int i = 0; i < cv->while_stack[cv->while_stack_top].break_jumps_count; i++) {
+        backpatch(cv, cv->while_stack[cv->while_stack_top].break_jumps[i], loop_end);
+    }
+
+    // continue文のバックパッチ
+    for (int i = 0; i < cv->while_stack[cv->while_stack_top].continue_jumps_count; i++) {
+        backpatch(cv, cv->while_stack[cv->while_stack_top].continue_jumps[i], loop_start);
+    }
+
     /* スタックをポップ */
     cv->while_stack_top--;
+}
+
+static void enter_breakstmt(Statement* stmt, Visitor* visitor) {
+    CodegenVisitor* cv = (CodegenVisitor*)visitor;
+    if (cv->while_stack_top == -1) {
+        return;
+    }
+    WhileBackpatchInfo* current_loop = &cv->while_stack[cv->while_stack_top];
+    if (current_loop->break_jumps_count >= MAX_WHILE_NEST_DEPTH) {
+        fprintf(stderr, "Error: Too many break statements in a loop\n");
+        exit(1);
+    }
+    current_loop->break_jumps[current_loop->break_jumps_count++] = gen_jump_code(cv, SVM_JUMP);
+}
+
+static void leave_breakstmt(Statement* stmt, Visitor* visitor) {
+    // leave処理は不要
+}
+
+static void enter_continuestmt(Statement* stmt, Visitor* visitor) {
+    CodegenVisitor* cv = (CodegenVisitor*)visitor;
+    if (cv->while_stack_top == -1) {
+        return;
+    }
+    WhileBackpatchInfo* current_loop = &cv->while_stack[cv->while_stack_top];
+    if (current_loop->continue_jumps_count >= MAX_WHILE_NEST_DEPTH) {
+        fprintf(stderr, "Error: Too many continue statements in a loop\n");
+        exit(1);
+    }
+    current_loop->continue_jumps[current_loop->continue_jumps_count++] = gen_jump_code(cv, SVM_JUMP);
+}
+
+static void leave_continuestmt(Statement* stmt, Visitor* visitor) {
+    // leave処理は不要
 }
 
 CodegenVisitor* create_codegen_visitor(CS_Compiler* compiler, CS_Executable *exec) {
@@ -850,59 +896,61 @@ CodegenVisitor* create_codegen_visitor(CS_Compiler* compiler, CS_Executable *exe
     enter_expr_list[CAST_EXPRESSION]          = enter_castexpr;
     
     enter_stmt_list[EXPRESSION_STATEMENT]     = enter_exprstmt;
-    enter_stmt_list[DECLARATION_STATEMENT]    = enter_declstmt;
-    enter_stmt_list[BLOCK_STATEMENT]          = enter_blockstmt;
-    enter_stmt_list[IF_STATEMENT]             = enter_ifstmt;  /* if文のenter関数を登録 */
-    enter_stmt_list[WHILE_STATEMENT]          = enter_whilestmt;
-    
-    notify_expr_list[ASSIGN_EXPRESSION]       = notify_assignexpr;
-    
-    /* if文: 条件式評価後にJUMP_IF_FALSE命令を生成するためのnotify関数 */
-    notify_stmt_list[IF_STATEMENT]            = notify_ifstmt;
-    notify_stmt_list[WHILE_STATEMENT]         = notify_whilestmt;
-    
-    /* if文: then節終了後にJUMP命令を生成し、JUMP_IF_FALSEをバックパッチするnotify2関数 */
-    notify2_stmt_list[IF_STATEMENT]           = notify2_ifstmt;
-    
-    
-    
-    leave_expr_list[BOOLEAN_EXPRESSION]       = leave_boolexpr;
-    leave_expr_list[INT_EXPRESSION]           = leave_intexpr;
-    leave_expr_list[DOUBLE_EXPRESSION]        = leave_doubleexpr;
-    leave_expr_list[IDENTIFIER_EXPRESSION]    = leave_identexpr;    
-    leave_expr_list[ADD_EXPRESSION]           = leave_addexpr;
-    leave_expr_list[SUB_EXPRESSION]           = leave_subexpr;
-    leave_expr_list[MUL_EXPRESSION]           = leave_mulexpr;
-    leave_expr_list[DIV_EXPRESSION]           = leave_divexpr;
-    leave_expr_list[MOD_EXPRESSION]           = leave_modexpr;    
-    leave_expr_list[GT_EXPRESSION]            = leave_gtexpr;
-    leave_expr_list[GE_EXPRESSION]            = leave_geexpr;
-    leave_expr_list[LT_EXPRESSION]            = leave_ltexpr;
-    leave_expr_list[LE_EXPRESSION]            = leave_leexpr;
-    leave_expr_list[EQ_EXPRESSION]            = leave_eqexpr;
-    leave_expr_list[NE_EXPRESSION]            = leave_neexpr;
-    leave_expr_list[LOGICAL_AND_EXPRESSION]   = enter_landexpr;
-    leave_expr_list[LOGICAL_OR_EXPRESSION]    = enter_lorexpr;
-    leave_expr_list[INCREMENT_EXPRESSION]     = leave_incexpr;
-    leave_expr_list[DECREMENT_EXPRESSION]     = leave_decexpr;
-    leave_expr_list[DECREMENT_EXPRESSION]     = leave_decexpr;
-    leave_expr_list[MINUS_EXPRESSION]         = leave_minusexpr;
-    leave_expr_list[LOGICAL_NOT_EXPRESSION]   = leave_lognotexpr;
-    leave_expr_list[ASSIGN_EXPRESSION]        = leave_assignexpr;
-    leave_expr_list[FUNCTION_CALL_EXPRESSION] = leave_funccallexpr;
-    leave_expr_list[CAST_EXPRESSION]          = leave_castexpr;
-    
-    leave_stmt_list[EXPRESSION_STATEMENT]     = leave_exprstmt;
-    leave_stmt_list[DECLARATION_STATEMENT]    = leave_declstmt;
-    leave_stmt_list[BLOCK_STATEMENT]          = leave_blockstmt;
-    leave_stmt_list[IF_STATEMENT]             = leave_ifstmt;  /* if文のleave関数を登録 */
-    leave_stmt_list[WHILE_STATEMENT]          = leave_whilestmt;
-    
-    
-    ((Visitor*)visitor)->enter_expr_list = enter_expr_list;
-    ((Visitor*)visitor)->leave_expr_list = leave_expr_list;
-    ((Visitor*)visitor)->enter_stmt_list = enter_stmt_list;
-    ((Visitor*)visitor)->leave_stmt_list = leave_stmt_list;
+        enter_stmt_list[DECLARATION_STATEMENT]    = enter_declstmt;
+        enter_stmt_list[BLOCK_STATEMENT]          = enter_blockstmt;
+        enter_stmt_list[IF_STATEMENT]             = enter_ifstmt;  /* if文のenter関数を登録 */
+        enter_stmt_list[WHILE_STATEMENT]          = enter_whilestmt;
+        enter_stmt_list[BREAK_STATEMENT]          = enter_breakstmt;
+        enter_stmt_list[CONTINUE_STATEMENT]       = enter_continuestmt;
+        
+        notify_expr_list[ASSIGN_EXPRESSION]       = notify_assignexpr;
+        
+        /* if文: 条件式評価後にJUMP_IF_FALSE命令を生成するためのnotify関数 */
+        notify_stmt_list[IF_STATEMENT]            = notify_ifstmt;
+        notify_stmt_list[WHILE_STATEMENT]         = notify_whilestmt;
+        
+        /* if文: then節終了後にJUMP命令を生成し、JUMP_IF_FALSEをバックパッチするnotify2関数 */
+        notify2_stmt_list[IF_STATEMENT]           = notify2_ifstmt;
+        
+        
+        
+        leave_expr_list[BOOLEAN_EXPRESSION]       = leave_boolexpr;
+        leave_expr_list[INT_EXPRESSION]           = leave_intexpr;
+        leave_expr_list[DOUBLE_EXPRESSION]        = leave_doubleexpr;
+        leave_expr_list[IDENTIFIER_EXPRESSION]    = leave_identexpr;    
+        leave_expr_list[ADD_EXPRESSION]           = leave_addexpr;
+        leave_expr_list[SUB_EXPRESSION]           = leave_subexpr;
+        leave_expr_list[MUL_EXPRESSION]           = leave_mulexpr;
+        leave_expr_list[DIV_EXPRESSION]           = leave_divexpr;
+        leave_expr_list[MOD_EXPRESSION]           = leave_modexpr;    
+        leave_expr_list[GT_EXPRESSION]            = leave_gtexpr;
+        leave_expr_list[GE_EXPRESSION]            = leave_geexpr;
+        leave_expr_list[LT_EXPRESSION]            = leave_ltexpr;
+        leave_expr_list[LE_EXPRESSION]            = leave_leexpr;
+        leave_expr_list[EQ_EXPRESSION]            = leave_eqexpr;
+        leave_expr_list[NE_EXPRESSION]            = leave_neexpr;
+        leave_expr_list[LOGICAL_AND_EXPRESSION]   = enter_landexpr;
+        leave_expr_list[LOGICAL_OR_EXPRESSION]    = enter_lorexpr;
+        leave_expr_list[INCREMENT_EXPRESSION]     = leave_incexpr;
+        leave_expr_list[DECREMENT_EXPRESSION]     = leave_decexpr;
+        leave_expr_list[MINUS_EXPRESSION]         = leave_minusexpr;
+        leave_expr_list[LOGICAL_NOT_EXPRESSION]   = leave_lognotexpr;
+        leave_expr_list[ASSIGN_EXPRESSION]        = leave_assignexpr;
+        leave_expr_list[FUNCTION_CALL_EXPRESSION] = leave_funccallexpr;
+        leave_expr_list[CAST_EXPRESSION]          = leave_castexpr;
+        
+        leave_stmt_list[EXPRESSION_STATEMENT]     = leave_exprstmt;
+        leave_stmt_list[DECLARATION_STATEMENT]    = leave_declstmt;
+        leave_stmt_list[BLOCK_STATEMENT]          = leave_blockstmt;
+        leave_stmt_list[IF_STATEMENT]             = leave_ifstmt;  /* if文のleave関数を登録 */
+        leave_stmt_list[WHILE_STATEMENT]          = leave_whilestmt;
+        leave_stmt_list[BREAK_STATEMENT]          = leave_breakstmt;
+        leave_stmt_list[CONTINUE_STATEMENT]       = leave_continuestmt;
+        
+        ((Visitor*)visitor)->enter_expr_list = enter_expr_list;
+        ((Visitor*)visitor)->leave_expr_list = leave_expr_list;
+        ((Visitor*)visitor)->enter_stmt_list = enter_stmt_list;
+        ((Visitor*)visitor)->leave_stmt_list = leave_stmt_list;
 
     ((Visitor*)visitor)->notify_expr_list = notify_expr_list;
     ((Visitor*)visitor)->notify_stmt_list = notify_stmt_list;    /* if文用: 条件式評価後 */

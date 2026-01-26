@@ -378,6 +378,32 @@ static void leave_whilestmt(Statement* stmt, Visitor* visitor) {
     fprintf(stderr, "leave whilestmt\n");
 }
 
+/* Break statement */
+static void enter_breakstmt(Statement* stmt, Visitor* visitor) {
+    print_depth();
+    fprintf(stderr, "enter breakstmt\n");
+    increment();
+}
+
+static void leave_breakstmt(Statement* stmt, Visitor* visitor) {
+    decrement();
+    print_depth();
+    fprintf(stderr, "leave breakstmt\n");
+}
+
+/* Continue statement */
+static void enter_continuestmt(Statement* stmt, Visitor* visitor) {
+    print_depth();
+    fprintf(stderr, "enter continuestmt\n");
+    increment();
+}
+
+static void leave_continuestmt(Statement* stmt, Visitor* visitor) {
+    decrement();
+    print_depth();
+    fprintf(stderr, "leave continuestmt\n");
+}
+
 
 Visitor* create_treeview_visitor() {
     visit_expr* enter_expr_list;
@@ -423,17 +449,19 @@ Visitor* create_treeview_visitor() {
     enter_stmt_list[BLOCK_STATEMENT]          = enter_blockstmt;
     enter_stmt_list[IF_STATEMENT]             = enter_ifstmt;  /* if文のenter関数を登録 */
     enter_stmt_list[WHILE_STATEMENT]          = enter_whilestmt; /* if文のenter関数を登録 */
-    
-    
+    enter_stmt_list[BREAK_STATEMENT]          = enter_breakstmt;
+    enter_stmt_list[CONTINUE_STATEMENT]       = enter_continuestmt;
+
+
     leave_expr_list[BOOLEAN_EXPRESSION]       = leave_boolexpr;
     leave_expr_list[INT_EXPRESSION]           = leave_intexpr;
     leave_expr_list[DOUBLE_EXPRESSION]        = leave_doubleexpr;
-    leave_expr_list[IDENTIFIER_EXPRESSION]    = leave_identexpr;    
+    leave_expr_list[IDENTIFIER_EXPRESSION]    = leave_identexpr;
     leave_expr_list[ADD_EXPRESSION]           = leave_addexpr;
     leave_expr_list[SUB_EXPRESSION]           = leave_subexpr;
     leave_expr_list[MUL_EXPRESSION]           = leave_mulexpr;
     leave_expr_list[DIV_EXPRESSION]           = leave_divexpr;
-    leave_expr_list[MOD_EXPRESSION]           = leave_modexpr;    
+    leave_expr_list[MOD_EXPRESSION]           = leave_modexpr;
     leave_expr_list[GT_EXPRESSION]            = leave_gtexpr;
     leave_expr_list[GE_EXPRESSION]            = leave_geexpr;
     leave_expr_list[LT_EXPRESSION]            = leave_ltexpr;
@@ -444,18 +472,19 @@ Visitor* create_treeview_visitor() {
     leave_expr_list[LOGICAL_OR_EXPRESSION]    = leave_lorexpr;
     leave_expr_list[INCREMENT_EXPRESSION]     = leave_incexpr;
     leave_expr_list[DECREMENT_EXPRESSION]     = leave_decexpr;
-    leave_expr_list[DECREMENT_EXPRESSION]     = leave_decexpr;
     leave_expr_list[MINUS_EXPRESSION]         = leave_minusexpr;
     leave_expr_list[LOGICAL_NOT_EXPRESSION]   = leave_lognotexpr;
     leave_expr_list[ASSIGN_EXPRESSION]        = leave_assignexpr;
     leave_expr_list[FUNCTION_CALL_EXPRESSION] = leave_funccallexpr;
     leave_expr_list[CAST_EXPRESSION]          = leave_castexpr;
-    
+
     leave_stmt_list[EXPRESSION_STATEMENT]     = leave_exprstmt;
     leave_stmt_list[DECLARATION_STATEMENT]    = leave_declstmt;
     leave_stmt_list[BLOCK_STATEMENT]          = leave_blockstmt;
     leave_stmt_list[IF_STATEMENT]             = leave_ifstmt;  /* if文のleave関数を登録 */
     leave_stmt_list[WHILE_STATEMENT]          = leave_whilestmt; /* while文のleave関数を登録 */
+    leave_stmt_list[BREAK_STATEMENT]          = leave_breakstmt;
+    leave_stmt_list[CONTINUE_STATEMENT]       = leave_continuestmt;
 
     visitor->enter_expr_list = enter_expr_list;
     visitor->leave_expr_list = leave_expr_list;

@@ -241,3 +241,13 @@ Statement* cs_create_while_statement(Expression *condition, Statement *body){
     return stmt;
 }
 
+Statement* cs_create_break_statement(void) {
+    Statement* stmt = cs_create_statement(BREAK_STATEMENT);
+    return stmt;
+}
+
+Statement* cs_create_continue_statement(void) {
+    Statement* stmt = cs_create_statement(CONTINUE_STATEMENT);
+    return stmt;
+}
+
