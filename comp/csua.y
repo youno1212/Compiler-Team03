@@ -76,7 +76,7 @@ int yylex();
                  
 %type <assignment_operator> assignment_operator
 %type <type_specifier> type_specifier
-%type <statement> statement declaration_statement block if_statement while_statement
+%type <statement> statement declaration_statement block if_statement while_statement break_statement continue_statement
 %type <statement_list> statement_list
 %type <function_declaration> function_definition
 
@@ -127,8 +127,24 @@ statement
 	| block
         | if_statement
         | while_statement
+        | break_statement
+        | continue_statement
         ;
         
+break_statement
+    : BREAK SEMICOLON
+    {
+        $$ = cs_create_break_statement();
+    }
+    ;
+
+continue_statement
+    : CONTINUE SEMICOLON
+    {
+        $$ = cs_create_continue_statement();
+    }
+    ;
+
 declaration_statement
         : type_specifier IDENTIFIER SEMICOLON 
         { 

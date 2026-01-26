@@ -42,6 +42,7 @@ struct MeanVisitor_tag {
     int i;
     int j;
     MeanCheckLogger *check_log;
+    int loop_nest_level;
 };
 
 typedef enum {
@@ -71,6 +72,10 @@ typedef struct {
 typedef struct {
     uint32_t loop_start_pos;      /* ループ開始位置 */
     uint32_t jump_if_false_pos;   /* JUMP_IF_FALSEのオペランド位置 */
+    uint32_t break_jumps[MAX_WHILE_NEST_DEPTH];
+    int      break_jumps_count;
+    uint32_t continue_jumps[MAX_WHILE_NEST_DEPTH];
+    int      continue_jumps_count;
 } WhileBackpatchInfo;
 
 

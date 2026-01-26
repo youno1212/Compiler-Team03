@@ -104,8 +104,15 @@ static void traverse_stmt_children(Statement* stmt, Visitor* visitor) {
 
             /* 4. leaveでループ末尾処理 */
             break;
-}
-
+        }
+        case BREAK_STATEMENT: {
+            // 子ノードはないので何もしない
+            break;
+        }
+        case CONTINUE_STATEMENT: {
+            // 子ノードはないので何もしない
+            break;
+        }
         default: {
             fprintf(stderr, "No such stmt->type %d in traverse_stmt_children\n", stmt->type);
         }

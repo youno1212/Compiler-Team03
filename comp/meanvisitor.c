@@ -566,10 +566,13 @@ static void leave_ifstmt(Statement* stmt, Visitor* visitor) {
 }
 
 static void enter_whilestmt(Statement *stmt, Visitor *visitor) {
-    // 事前処理は不要
+    MeanVisitor *mean_visitor = (MeanVisitor*)visitor;
+    mean_visitor->loop_nest_level++;
 }
 
 static void leave_whilestmt(Statement *stmt, Visitor *visitor) {
+    MeanVisitor *mean_visitor = (MeanVisitor*)visitor;
+    mean_visitor->loop_nest_level--;
     Expression *condition = stmt->u.while_s->condition;
     if (condition->type && !cs_is_boolean(condition->type)) {
         char message[100];
@@ -581,6 +584,32 @@ static void leave_whilestmt(Statement *stmt, Visitor *visitor) {
     }
 }
 
+static void enter_breakstmt(Statement *stmt, Visitor *visitor) {
+    MeanVisitor *mean_visitor = (MeanVisitor*)visitor;
+    if (mean_visitor->loop_nest_level == 0) {
+        char message[100];
+        sprintf(message, "%d: break statement not within a loop", stmt->line_number);
+        add_check_log(message, visitor);
+    }
+}
+
+static void leave_breakstmt(Statement *stmt, Visitor *visitor) {
+    // break文には特別なleave処理は不要
+}
+
+static void enter_continuestmt(Statement *stmt, Visitor *visitor) {
+    MeanVisitor *mean_visitor = (MeanVisitor*)visitor;
+    if (mean_visitor->loop_nest_level == 0) {
+        char message[100];
+        sprintf(message, "%d: continue statement not within a loop", stmt->line_number);
+        add_check_log(message, visitor);
+    }
+}
+
+static void leave_continuestmt(Statement *stmt, Visitor *visitor) {
+    // continue文には特別なleave処理は不要
+}
+
 MeanVisitor* create_mean_visitor() {
     visit_expr* enter_expr_list;
     visit_expr* leave_expr_list;
@@ -590,6 +619,7 @@ MeanVisitor* create_mean_visitor() {
     MeanVisitor* visitor = MEM_malloc(sizeof(MeanVisitor));
     visitor->check_log = NULL;
     visitor->compiler = cs_get_current_compiler();
+    visitor->loop_nest_level = 0;
     if (visitor->compiler == NULL) {
         fprintf(stderr, "Compile is NULL\n");
         exit(1);
@@ -633,6 +663,8 @@ MeanVisitor* create_mean_visitor() {
     enter_stmt_list[BLOCK_STATEMENT]          = enter_blockstmt;  // ← 追加
     enter_stmt_list[IF_STATEMENT]             = enter_ifstmt;
     enter_stmt_list[WHILE_STATEMENT]          = enter_whilestmt;
+    enter_stmt_list[BREAK_STATEMENT]          = enter_breakstmt;
+    enter_stmt_list[CONTINUE_STATEMENT]       = enter_continuestmt;
 
 
     leave_expr_list[BOOLEAN_EXPRESSION]       = leave_boolexpr;
@@ -654,7 +686,6 @@ MeanVisitor* create_mean_visitor() {
     leave_expr_list[LOGICAL_OR_EXPRESSION]    = leave_lorexpr;
     leave_expr_list[INCREMENT_EXPRESSION]     = leave_incexpr;
     leave_expr_list[DECREMENT_EXPRESSION]     = leave_decexpr;
-    leave_expr_list[DECREMENT_EXPRESSION]     = leave_decexpr;
     leave_expr_list[MINUS_EXPRESSION]         = leave_minusexpr;
     leave_expr_list[LOGICAL_NOT_EXPRESSION]   = leave_lognotexpr;
     leave_expr_list[ASSIGN_EXPRESSION]        = leave_assignexpr;
@@ -666,7 +697,8 @@ MeanVisitor* create_mean_visitor() {
     leave_stmt_list[BLOCK_STATEMENT]          = leave_blockstmt;  // ← 追加
     leave_stmt_list[IF_STATEMENT]             = leave_ifstmt;
     leave_stmt_list[WHILE_STATEMENT]          = leave_whilestmt;
-
+    leave_stmt_list[BREAK_STATEMENT]          = leave_breakstmt;
+    leave_stmt_list[CONTINUE_STATEMENT]       = leave_continuestmt;
 
     ((Visitor*)visitor)->enter_expr_list = enter_expr_list;
     ((Visitor*)visitor)->leave_expr_list = leave_expr_list;

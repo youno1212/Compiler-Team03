@@ -108,6 +108,9 @@ static void disasm(SVM_VirtualMachine* svm) {
             case SVM_POP:
             case SVM_ADD_INT:
             case SVM_SUB_INT:
+            case SVM_MUL_INT:
+            case SVM_DIV_INT:
+            case SVM_MOD_INT:
             /* 比較演算子 */
             case SVM_GT_INT:
             case SVM_GE_INT:
@@ -419,6 +422,24 @@ static void svm_run(SVM_VirtualMachine* svm) {
                 int iv2 = pop_i(svm);  /* 右辺（引く数） */
                 int iv1 = pop_i(svm);  /* 左辺（引かれる数） */
                 push_i(svm, (iv1 - iv2));
+                break;
+            }
+            case SVM_MUL_INT: {  /* 乗算: */
+                int iv2 = pop_i(svm);  /* 右辺 */
+                int iv1 = pop_i(svm);  /* 左辺 */
+                push_i(svm, (iv1 * iv2));
+                break;
+            }
+            case SVM_DIV_INT: {  /* 除算: */
+                int iv2 = pop_i(svm);  /* 右辺 */
+                int iv1 = pop_i(svm);  /* 左辺 */
+                push_i(svm, (iv1 / iv2));
+                break;
+            }
+            case SVM_MOD_INT: {  /* 剰余: n % i などで使用 */
+                int iv2 = pop_i(svm);  /* 右辺（割る数） */
+                int iv1 = pop_i(svm);  /* 左辺（割られる数） */
+                push_i(svm, (iv1 % iv2));
                 break;
             }
             /* ============================================================
